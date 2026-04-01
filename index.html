@@ -326,7 +326,11 @@
 <section class="hero" id="hero">
   <div class="hero-bg"></div>
   <div class="hero-inner">
-    <p class="hero-eyebrow">PRAGUE &amp; SURROUNDINGS</p>
+    <p class="hero-eyebrow">
+      <span id="greetingText"></span>
+      <span style="color:rgba(255,255,255,0.25); margin: 0 10px;">|</span>
+      PRAGUE &amp; SURROUNDINGS
+    </p>
     <h1 class="hero-h1">
       <span class="plain">FIND YOUR</span>
       <span class="serif">Run Club</span>
@@ -457,7 +461,7 @@ const CLUBS = [
   { id:17, name:"Trailpoint Run Club",                    category:"Brand",      days:["varies"],                        time:"18:00",                   pace:"trail",         meet:"Trailpoint store, Jirečkova 7, Letná",       lat:50.0996, lng:14.4241, free:true,  desc:"Trail-focused sessions departing from Letná. Includes terrain runs, headlamp testing, and specialised workshops.", link:"https://www.trailpoint.cz" },
 
   // GYM
-  { id:18, name:"Next.Move Run Club",                     category:"Gym",        days:["Sunday"],                        time:"17:00",                   pace:"3 groups",      meet:"Next.Move Fitness, Fragment Karlín",        lat:50.0961, lng:14.4578, free:true,  desc:"Free and open to members and non-members. Three pace groups: beginner, intermediate, advanced. One of the most accessible gym-based run clubs.", link:"https://www.nextmove.cz" },
+  { id:18, name:"Next.Move Run Club",                     category:"Gym",        days:["Sunday"],                        time:"17:00",                   pace:"3 groups",      meet:"Next.Move Fitness, Fragment Karlín",        lat:50.096735, lng:14.460640, free:true,  desc:"Free and open to members and non-members. Three pace groups: beginner, intermediate, advanced. One of the most accessible gym-based run clubs.", link:"https://www.nextmove.cz" },
   { id:19, name:"Esse Athletes",                          category:"Gym",        days:["Thursday","Sunday"],             time:"Thu: evening / Sun: morning", pace:"~6:00 (long)", meet:"Prague Congress Center, Metro Vyšehrad",  lat:50.0624, lng:14.4294, free:false, desc:"Performance and marathon-focused training. Thursday: structured tempo/intervals and fartleks. Sunday: easy-paced long runs.", link:"https://www.esseathletes.com/" },
 
   // PRO CENTER
@@ -532,6 +536,23 @@ function toggleTonight() {
     document.getElementById('tonightBtn').classList.remove('active');
   }
   render();
+}
+
+/* ── GREETING INIT ────────────────────────────────────────────────── */
+function initGreeting() {
+  const hour = new Date().getHours();
+  let greeting = "Good night runners";
+  
+  if (hour >= 4 && hour < 12) {
+    greeting = "Good morning runners";
+  } else if (hour >= 12 && hour < 18) {
+    greeting = "Good afternoon runners";
+  } else if (hour >= 18 && hour < 22) {
+    greeting = "Good evening runners";
+  }
+  
+  const greetingEl = document.getElementById('greetingText');
+  if (greetingEl) greetingEl.textContent = greeting;
 }
 
 /* ── GEOLOCATION ──────────────────────────────────────────────────── */
@@ -750,6 +771,7 @@ function closeDetail() {
 }
 
 /* ── INIT ─────────────────────────────────────────────────────────── */
+initGreeting();
 initTonight();
 render();
 
