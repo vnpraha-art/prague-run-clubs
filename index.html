@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Prague Run Clubs — Find your crew</title>
-  <meta name="description" content="Find running clubs in Prague and nearby. Interactive map, 23 clubs, filters by day, pace, and category.">
+  <meta name="description" content="Find running clubs in Prague and nearby. Interactive map, 23 clubs, filters by day, pace, time, and distance.">
   <meta property="og:title" content="Prague Run Clubs">
   <meta property="og:description" content="Find your running crew in Prague. 23 clubs, 21 free to join.">
 
@@ -240,6 +240,7 @@
     .ctag { font-size: 10px; padding: 2px 7px; border-radius: 3px; font-weight: 600; }
     .ctag-free { background: rgba(100,220,120,0.12); color: #64dc78; }
     .ctag-paid { background: rgba(255,100,100,0.12); color: #ff8080; }
+    .ctag-dist { background: var(--s3); color: var(--text); border: 1px solid var(--border); padding: 1px 6px; }
 
     .c-link {
       display: flex; align-items: center; justify-content: center;
@@ -372,8 +373,8 @@
     </div>
 
     <div class="f-block">
-      <div class="f-label">Category</div>
-      <div class="pills" id="catFilter"></div>
+      <div class="f-label">Time of Day</div>
+      <div class="pills" id="timeFilter"></div>
     </div>
 
     <div class="f-block">
@@ -382,8 +383,18 @@
     </div>
 
     <div class="f-block">
+      <div class="f-label">Distance</div>
+      <div class="pills" id="distFilter"></div>
+    </div>
+
+    <div class="f-block">
       <div class="f-label">Pace (min/km)</div>
       <div class="pills" id="paceFilter"></div>
+    </div>
+    
+    <div class="f-block">
+      <div class="f-label">Category</div>
+      <div class="pills" id="catFilter"></div>
     </div>
 
     <button class="btn-near-sidebar" id="nearSideBtn" onclick="toggleNearMe()">📍 Sort by distance from me</button>
@@ -410,9 +421,12 @@
           <div class="d-field"><label>Day(s)</label><p id="dDay"></p></div>
           <div class="d-field"><label>Time</label><p id="dTime"></p></div>
           <div class="d-field"><label>Pace</label><p id="dPace"></p></div>
-          <div class="d-field d-meet"><label>Meeting Point</label><p id="dMeet"></p></div>
-          <div class="d-field"><label>Entry</label><p id="dFree"></p></div>
+          
+          <div class="d-field"><label>Distance</label><p id="dDist"></p></div>
           <div class="d-field"><label>Category</label><p id="dCat"></p></div>
+          <div class="d-field"><label>Entry</label><p id="dFree"></p></div>
+          
+          <div class="d-field d-meet"><label>Meeting Point</label><p id="dMeet"></p></div>
         </div>
         <div class="d-desc" id="dDesc"></div>
         <a id="dLink" class="d-link" href="#" target="_blank" rel="noopener">↗ Visit website</a>
@@ -437,48 +451,51 @@ const CAT_COLORS = {
   "Near Prague": "#34d399"
 };
 
-// Slightly offset identical coordinates (by ±0.0002) so markers don't perfectly stack and hide each other.
+// Offset identical coordinates (by ±0.0002) so markers don't perfectly stack
 const CLUBS = [
   // COMMUNITY
-  { id:1,  name:"Prague Running Crew — Track Tuesday",    category:"Community",  days:["Tuesday"],                       time:"19:00–21:00",            pace:"varied",        meet:"Unyp Arena, Prague 9",                      lat:50.1077, lng:14.4820, free:true,  desc:"Interval-focused speed sessions at the track. Open to all levels with structured goals. Part of the broader Prague Running Crew.", link:"https://www.instagram.com/praguerunningcrew/" },
-  { id:2,  name:"Prague Running Crew — Saturday Run",     category:"Community",  days:["Saturday"],                      time:"Gather 8:45, start 9:30", pace:"varied",        meet:"The Miners Coffee Bakery, Karlín",           lat:50.0934, lng:14.4485, free:true,  desc:"Social Saturday long run with route options: 7km (Groovy), 12km, and 18km. Coffee and bakery social before the start.", link:"https://www.instagram.com/praguerunningcrew/" },
-  { id:3,  name:"Prague Social Runners — Wed Vltava",     category:"Community",  days:["Wednesday"],                     time:"18:30",                   pace:"social",        meet:"Kavárna Liberál, Holešovice",               lat:50.0991, lng:14.4355, free:true,  desc:"9km flat route along the Vltava riverbank. Relaxed atmosphere, all welcome. One of Prague's most popular midweek social runs.", link:"https://www.instagram.com/praguesocialrunners/" },
-  { id:4,  name:"Prague Social Runners — Sat Stromovka",  category:"Community",  days:["Saturday"],                      time:"10:00",                   pace:"social",        meet:"Výstaviště Main Gate, Holešovice",           lat:50.1065, lng:14.4320, free:true,  desc:"50-minute social run through Stromovka park. Casual, beginner-friendly, great for meeting the running community.", link:"https://www.instagram.com/praguesocialrunners/" },
-  { id:5,  name:"LOVE THEM Running Club — Tue 5K",        category:"Community",  days:["Tuesday"],                       time:"evening",                 pace:"6:10–6:30",     meet:"Elias Cafe, Vinohrady",                     lat:50.0784, lng:14.4428, free:true,  desc:"Social 5km run at an easy, conversational pace. Welcoming community for beginners and casual runners.", link:"https://lovethemclub.com/" },
-  { id:6,  name:"LOVE THEM Running Club — Sun 14K",       category:"Community",  days:["Sunday"],                        time:"morning",                 pace:"6:10–6:30",     meet:"Elias Cafe, Vinohrady",                     lat:50.0786, lng:14.4428, free:true,  desc:"Longer 14km Sunday run from the same starting point. Same friendly, social vibe stretched over more distance.", link:"https://lovethemclub.com/" },
-  { id:7,  name:"Founders Running Club (FRC)",            category:"Community",  days:["varies"],                        time:"weekly",                  pace:"easy",          meet:"Lagom Bistro, Praha 8",                     lat:50.0945, lng:14.4530, free:true,  desc:"Easy runs followed by networking over coffee. Pets, friends, and family welcome. Popular with the startup and tech crowd.", link:"https://www.instagram.com/prague_founders_running_club/" },
-  { id:8,  name:"Nomilesnosmiles — Tue Community Run",    category:"Community",  days:["Tuesday"],                       time:"18:20",                   pace:"varied",        meet:"Praha (check socials for exact spot)",       lat:50.0810, lng:14.4310, free:true,  desc:"Community run with a strong local crew. Check their Instagram for the exact meeting point each week.", link:"https://www.instagram.com/nomilesnosmiles/" },
-  { id:9,  name:"Nomilesnosmiles — Wed Track",            category:"Community",  days:["Wednesday"],                     time:"18:00",                   pace:"varied",        meet:"Praha (check socials for exact spot)",       lat:50.0812, lng:14.4315, free:true,  desc:"Track-focused midweek session. Speed work and intervals in a group setting.", link:"https://www.instagram.com/nomilesnosmiles/" },
-  { id:10, name:"Nomilesnosmiles — Sun Long Run",         category:"Community",  days:["Sunday"],                        time:"09:00",                   pace:"easy",          meet:"Praha (check socials for exact spot)",       lat:50.0808, lng:14.4305, free:true,  desc:"Easy Sunday long run. Great way to close out the week with the crew.", link:"https://www.instagram.com/nomilesnosmiles/" },
-  { id:11, name:"Groovy Girls Run Club",                  category:"Community",  days:["Wednesday"],                     time:"18:00",                   pace:"7:00–7:10",     meet:"Supernova Bakehouse, Karlín",               lat:50.0928, lng:14.4452, free:true,  desc:"A running community specifically for female beginners. 4km run at a comfortable, non-intimidating pace. Supportive and encouraging.", link:"https://www.instagram.com/groovygirlsrunclub.prague/" },
-  { id:12, name:"Viva Sports — Sunday Social 5K",         category:"Community",  days:["Sunday"],                        time:"morning",                 pace:"social",        meet:"Praha (check socials for exact spot)",       lat:50.0760, lng:14.4190, free:true,  desc:"5K run followed by breakfast and conversation. Combines fitness with community and good food.", link:"https://www.vivasports.cz/" },
+  { id:1,  name:"Prague Running Crew — Track Tuesday",    category:"Community",  days:["Tuesday"],                       time:"19:00–21:00",            timeFilter:["Evening"],             distFilter:["Track / Intervals"],         distText:"Track",                 pace:"varied",        meet:"Unyp Arena, Prague 9",                      lat:50.1077, lng:14.4820, free:true,  desc:"Interval-focused speed sessions at the track. Open to all levels with structured goals. Part of the broader Prague Running Crew.", link:"https://www.instagram.com/praguerunningcrew/" },
+  { id:2,  name:"Prague Running Crew — Saturday Run",     category:"Community",  days:["Saturday"],                      time:"Gather 8:45, start 9:30", timeFilter:["Morning"],             distFilter:["5–10 km", "10+ km"],         distText:"7, 12, or 18 km",       pace:"varied",        meet:"The Miners Coffee Bakery, Karlín",           lat:50.0934, lng:14.4485, free:true,  desc:"Social Saturday long run with route options: 7km (Groovy), 12km, and 18km. Coffee and bakery social before the start.", link:"https://www.instagram.com/praguerunningcrew/" },
+  { id:3,  name:"Prague Social Runners — Wed Vltava",     category:"Community",  days:["Wednesday"],                     time:"18:30",                   timeFilter:["Evening"],             distFilter:["5–10 km"],                   distText:"9 km",                  pace:"social",        meet:"Kavárna Liberál, Holešovice",               lat:50.0991, lng:14.4355, free:true,  desc:"9km flat route along the Vltava riverbank. Relaxed atmosphere, all welcome. One of Prague's most popular midweek social runs.", link:"https://www.instagram.com/praguesocialrunners/" },
+  { id:4,  name:"Prague Social Runners — Sat Stromovka",  category:"Community",  days:["Saturday"],                      time:"10:00",                   timeFilter:["Morning"],             distFilter:["5–10 km"],                   distText:"~8 km",                 pace:"social",        meet:"Výstaviště Main Gate, Holešovice",           lat:50.1065, lng:14.4320, free:true,  desc:"50-minute social run through Stromovka park. Casual, beginner-friendly, great for meeting the running community.", link:"https://www.instagram.com/praguesocialrunners/" },
+  { id:5,  name:"LOVE THEM Running Club — Tue 5K",        category:"Community",  days:["Tuesday"],                       time:"evening",                 timeFilter:["Evening"],             distFilter:["Up to 5 km", "5–10 km"],     distText:"5 km",                  pace:"6:10–6:30",     meet:"Elias Cafe, Vinohrady",                     lat:50.0784, lng:14.4428, free:true,  desc:"Social 5km run at an easy, conversational pace. Welcoming community for beginners and casual runners.", link:"https://lovethemclub.com/" },
+  { id:6,  name:"LOVE THEM Running Club — Sun 14K",       category:"Community",  days:["Sunday"],                        time:"morning",                 timeFilter:["Morning"],             distFilter:["10+ km"],                    distText:"14 km",                 pace:"6:10–6:30",     meet:"Elias Cafe, Vinohrady",                     lat:50.0786, lng:14.4428, free:true,  desc:"Longer 14km Sunday run from the same starting point. Same friendly, social vibe stretched over more distance.", link:"https://lovethemclub.com/" },
+  { id:7,  name:"Founders Running Club (FRC)",            category:"Community",  days:["varies"],                        time:"weekly",                  timeFilter:["Morning", "Evening"],  distFilter:["5–10 km"],                   distText:"~5–8 km",               pace:"easy",          meet:"Lagom Bistro, Praha 8",                     lat:50.0945, lng:14.4530, free:true,  desc:"Easy runs followed by networking over coffee. Pets, friends, and family welcome. Popular with the startup and tech crowd.", link:"https://www.instagram.com/prague_founders_running_club/" },
+  { id:8,  name:"Nomilesnosmiles — Tue Community Run",    category:"Community",  days:["Tuesday"],                       time:"18:20",                   timeFilter:["Evening"],             distFilter:["5–10 km"],                   distText:"~8–10 km",              pace:"varied",        meet:"Praha (check socials for exact spot)",       lat:50.0810, lng:14.4310, free:true,  desc:"Community run with a strong local crew. Check their Instagram for the exact meeting point each week.", link:"https://www.instagram.com/nomilesnosmiles/" },
+  { id:9,  name:"Nomilesnosmiles — Wed Track",            category:"Community",  days:["Wednesday"],                     time:"18:00",                   timeFilter:["Evening"],             distFilter:["Track / Intervals"],         distText:"Track",                 pace:"varied",        meet:"Praha (check socials for exact spot)",       lat:50.0812, lng:14.4315, free:true,  desc:"Track-focused midweek session. Speed work and intervals in a group setting.", link:"https://www.instagram.com/nomilesnosmiles/" },
+  { id:10, name:"Nomilesnosmiles — Sun Long Run",         category:"Community",  days:["Sunday"],                        time:"09:00",                   timeFilter:["Morning"],             distFilter:["10+ km"],                    distText:"15+ km",                pace:"easy",          meet:"Praha (check socials for exact spot)",       lat:50.0808, lng:14.4305, free:true,  desc:"Easy Sunday long run. Great way to close out the week with the crew.", link:"https://www.instagram.com/nomilesnosmiles/" },
+  { id:11, name:"Groovy Girls Run Club",                  category:"Community",  days:["Wednesday"],                     time:"18:00",                   timeFilter:["Evening"],             distFilter:["Up to 5 km"],                distText:"4 km",                  pace:"7:00–7:10",     meet:"Supernova Bakehouse, Karlín",               lat:50.0928, lng:14.4452, free:true,  desc:"A running community specifically for female beginners. 4km run at a comfortable, non-intimidating pace. Supportive and encouraging.", link:"https://www.instagram.com/groovygirlsrunclub.prague/" },
+  { id:12, name:"Viva Sports — Sunday Social 5K",         category:"Community",  days:["Sunday"],                        time:"morning",                 timeFilter:["Morning"],             distFilter:["Up to 5 km", "5–10 km"],     distText:"5 km",                  pace:"social",        meet:"Praha (check socials for exact spot)",       lat:50.0760, lng:14.4190, free:true,  desc:"5K run followed by breakfast and conversation. Combines fitness with community and good food.", link:"https://www.vivasports.cz/" },
 
   // BRAND
-  { id:13, name:"Nike Run Club — Mon & Thu Letná",        category:"Brand",      days:["Monday","Thursday"],             time:"18:00 (start 18:15)",     pace:"3 groups",      meet:"NPC Letná, Letenské sady 32",               lat:50.0965, lng:14.4250, free:true,  desc:"Three pace groups for all levels. Structured sessions led by Nike pacers. One of the most established brand-run clubs in Prague.", link:"https://www.nike.com/cz/running/run-clubs" },
-  { id:14, name:"Nike Run Club — Bi-weekly Wednesday",    category:"Brand",      days:["Wednesday"],                     time:"18:00",                   pace:"varied",        meet:"Nike Prague / Nike Chodov (alternates)",     lat:50.0858, lng:14.4253, free:true,  desc:"Alternating bi-weekly sessions from two store locations. Check Nike's channels for which store is running each week.", link:"https://www.nike.com/cz/running/run-clubs" },
-  { id:15, name:"Adidas Runners Prague",                  category:"Brand",      days:["Tuesday","Thursday"],            time:"18:00",                   pace:"varied",        meet:"Adidas Runbase Karlín, Pobřežní 78",         lat:50.0933, lng:14.4536, free:true,  desc:"Twice-weekly runs from the Runbase. Registered members also get free strength training and yoga classes.", link:"https://www.instagram.com/adidasrunnersprague/" },
-  { id:16, name:"Top4Running Club",                       category:"Brand",      days:["Tuesday","Thursday"],            time:"18:00",                   pace:"varied",        meet:"Top4Running flagship, Náplavní 1",           lat:50.0765, lng:14.4146, free:true,  desc:"Coach-led workouts twice a week for beginners and experienced runners alike. No registration needed — just show up.", link:"https://top4running.cz/" },
-  { id:17, name:"Trailpoint Run Club",                    category:"Brand",      days:["varies"],                        time:"18:00",                   pace:"trail",         meet:"Trailpoint store, Jirečkova 7, Letná",       lat:50.0996, lng:14.4241, free:true,  desc:"Trail-focused sessions departing from Letná. Includes terrain runs, headlamp testing, and specialised workshops.", link:"https://www.trailpoint.cz" },
+  { id:13, name:"Nike Run Club — Mon & Thu Letná",        category:"Brand",      days:["Monday","Thursday"],             time:"18:00 (start 18:15)",     timeFilter:["Evening"],             distFilter:["Up to 5 km", "5–10 km"],     distText:"5, 7, 10 km groups",    pace:"3 groups",      meet:"NPC Letná, Letenské sady 32",               lat:50.0965, lng:14.4250, free:true,  desc:"Three pace groups for all levels. Structured sessions led by Nike pacers. One of the most established brand-run clubs in Prague.", link:"https://www.nike.com/cz/running/run-clubs" },
+  { id:14, name:"Nike Run Club — Bi-weekly Wednesday",    category:"Brand",      days:["Wednesday"],                     time:"18:00",                   timeFilter:["Evening"],             distFilter:["5–10 km"],                   distText:"5–8 km",                pace:"varied",        meet:"Nike Prague / Nike Chodov (alternates)",     lat:50.0858, lng:14.4253, free:true,  desc:"Alternating bi-weekly sessions from two store locations. Check Nike's channels for which store is running each week.", link:"https://www.nike.com/cz/running/run-clubs" },
+  { id:15, name:"Adidas Runners Prague",                  category:"Brand",      days:["Tuesday","Thursday"],            time:"18:00",                   timeFilter:["Evening"],             distFilter:["5–10 km"],                   distText:"7–10 km",               pace:"varied",        meet:"Adidas Runbase Karlín, Pobřežní 78",         lat:50.0933, lng:14.4536, free:true,  desc:"Twice-weekly runs from the Runbase. Registered members also get free strength training and yoga classes.", link:"https://www.instagram.com/adidasrunnersprague/" },
+  { id:16, name:"Top4Running Club",                       category:"Brand",      days:["Tuesday","Thursday"],            time:"18:00",                   timeFilter:["Evening"],             distFilter:["Up to 5 km", "5–10 km", "Track / Intervals"], distText:"Drills + 5 km", pace:"varied", meet:"Top4Running flagship, Náplavní 1", lat:50.0765, lng:14.4146, free:true,  desc:"Coach-led workouts twice a week for beginners and experienced runners alike. No registration needed — just show up.", link:"https://top4running.cz/" },
+  { id:17, name:"Trailpoint Run Club",                    category:"Brand",      days:["varies"],                        time:"18:00",                   timeFilter:["Evening"],             distFilter:["10+ km"],                    distText:"10–15 km (Trail)",      pace:"trail",         meet:"Trailpoint store, Jirečkova 7, Letná",       lat:50.0996, lng:14.4241, free:true,  desc:"Trail-focused sessions departing from Letná. Includes terrain runs, headlamp testing, and specialised workshops.", link:"https://www.trailpoint.cz" },
 
   // GYM
-  { id:18, name:"Next.Move Run Club",                     category:"Gym",        days:["Sunday"],                        time:"17:00",                   pace:"3 groups",      meet:"Next.Move Fitness, Fragment Karlín",        lat:50.096735, lng:14.460640, free:true,  desc:"Free and open to members and non-members. Three pace groups: beginner, intermediate, advanced. One of the most accessible gym-based run clubs.", link:"https://www.nextmove.cz" },
-  { id:19, name:"Esse Athletes",                          category:"Gym",        days:["Thursday","Sunday"],             time:"Thu: evening / Sun: morning", pace:"~6:00 (long)", meet:"Prague Congress Center, Metro Vyšehrad",  lat:50.0624, lng:14.4294, free:false, desc:"Performance and marathon-focused training. Thursday: structured tempo/intervals and fartleks. Sunday: easy-paced long runs.", link:"https://www.esseathletes.com/" },
+  { id:18, name:"Next.Move Run Club",                     category:"Gym",        days:["Sunday"],                        time:"17:00",                   timeFilter:["Evening"],             distFilter:["Up to 5 km", "5–10 km"],     distText:"5, 8, or 10 km",        pace:"3 groups",      meet:"Next.Move Fitness, Fragment Karlín",        lat:50.096735, lng:14.460640, free:true,  desc:"Free and open to members and non-members. Three pace groups: beginner, intermediate, advanced. One of the most accessible gym-based run clubs.", link:"https://www.nextmove.cz" },
+  { id:19, name:"Esse Athletes",                          category:"Gym",        days:["Thursday","Sunday"],             time:"Thu: evening / Sun: morning", timeFilter:["Morning", "Evening"], distFilter:["10+ km", "Track / Intervals"], distText:"Intervals / Long Runs", pace:"~6:00 (long)", meet:"Prague Congress Center, Metro Vyšehrad",  lat:50.0624, lng:14.4294, free:false, desc:"Performance and marathon-focused training. Thursday: structured tempo/intervals and fartleks. Sunday: easy-paced long runs.", link:"https://www.esseathletes.com/" },
 
   // PRO CENTER
-  { id:20, name:"Running Mall (RunCzech Training Center)", category:"Pro Center", days:["Monday","Wednesday","Friday"],   time:"various",                 pace:"structured",    meet:"Františka Křížka 11, Praha 7",               lat:50.0998, lng:14.4332, free:false, desc:"Fee-based structured programs: Wake Up Run, Sunrise Run (bi-weekly Fridays, intervals + hills), VO2max Boost, and Running Technique.", link:"https://www.runczech.com/en/training-center" },
-  { id:21, name:"Mattoni FreeRun",                        category:"Pro Center", days:["Monday"],                        time:"18:00",                   pace:"varied",        meet:"Stromovka Park (near Planetarium)",         lat:50.1054, lng:14.4267, free:true,  desc:"Free coach-led training sessions in Stromovka every Monday. Structured workout with professional guidance at no cost.", link:"https://freerun.mattoni.cz" },
+  { id:20, name:"Running Mall (RunCzech Training Center)", category:"Pro Center", days:["Monday","Wednesday","Friday"],   time:"various",                 timeFilter:["Morning", "Afternoon", "Evening"], distFilter:["Track / Intervals"], distText:"Structured",  pace:"structured",    meet:"Františka Křížka 11, Praha 7",               lat:50.0998, lng:14.4332, free:false, desc:"Fee-based structured programs: Wake Up Run, Sunrise Run (bi-weekly Fridays, intervals + hills), VO2max Boost, and Running Technique.", link:"https://www.runczech.com/en/training-center" },
+  { id:21, name:"Mattoni FreeRun",                        category:"Pro Center", days:["Monday"],                        time:"18:00",                   timeFilter:["Evening"],             distFilter:["5–10 km"],                   distText:"Structured (~7 km)",    pace:"varied",        meet:"Stromovka Park (near Planetarium)",         lat:50.1054, lng:14.4267, free:true,  desc:"Free coach-led training sessions in Stromovka every Monday. Structured workout with professional guidance at no cost.", link:"https://freerun.mattoni.cz" },
 
   // NEAR PRAGUE
-  { id:22, name:"Rozběháme Kladno",                       category:"Near Prague", days:["Wednesday","Thursday","Saturday","Sunday"], time:"Wed/Thu/Sat 17:30 · Sun 09:00", pace:"varied", meet:"Sletiště Kladno",                  lat:50.1384, lng:14.0926, free:true,  desc:"Highly active club in Kladno with 4 sessions per week. Known for canicross (running with dogs) workshops. Great community just outside the city.", link:"https://www.instagram.com/rozbehame.kladno/" },
-  { id:23, name:"OK Roztoky (Orienteering Club)",         category:"Near Prague", days:["Wednesday"],                     time:"17:00 summer / 16:30 winter", pace:"varied",   meet:"Roztoky u Prahy",                           lat:50.1594, lng:14.3980, free:false, desc:"Orienteering-focused club with training for both youth and adults. Wednesday sessions in the forests around Roztoky.", link:"https://www.okroztoky.cz" }
+  { id:22, name:"Rozběháme Kladno",                       category:"Near Prague", days:["Wednesday","Thursday","Saturday","Sunday"], time:"Wed/Thu/Sat 17:30 · Sun 09:00", timeFilter:["Morning", "Evening"], distFilter:["Varies / Social"], distText:"Varies", pace:"varied", meet:"Sletiště Kladno",                  lat:50.1384, lng:14.0926, free:true,  desc:"Highly active club in Kladno with 4 sessions per week. Known for canicross (running with dogs) workshops. Great community just outside the city.", link:"https://www.instagram.com/rozbehame.kladno/" },
+  { id:23, name:"OK Roztoky (Orienteering Club)",         category:"Near Prague", days:["Wednesday"],                     time:"17:00 summer / 16:30 winter", timeFilter:["Afternoon", "Evening"], distFilter:["Varies / Social"], distText:"Orienteering", pace:"varied", meet:"Roztoky u Prahy",                           lat:50.1594, lng:14.3980, free:false, desc:"Orienteering-focused club with training for both youth and adults. Wednesday sessions in the forests around Roztoky.", link:"https://www.okroztoky.cz" }
 ];
 
 /* ── STATE & CONSTANTS ─────────────────────────────────────────────── */
+const TIMEOFDAY = ["Morning", "Afternoon", "Evening"];
+const DISTANCES = ["Up to 5 km", "5–10 km", "10+ km", "Track / Intervals", "Varies / Social"];
 const DAYS  = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 const PACES = ["< 5:00","5:00–6:00","6:00–7:00","7:00+","Social / varied"];
+
 const jsDay = new Date().getDay(); // 0=Sun ... 6=Sat
 const TODAY = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][jsDay];
-const state = { search:"", cat:null, day:null, pace:null, selected:null, tonight:false, nearMe:false, userLat:null, userLng:null };
+const state = { search:"", cat:null, day:null, timeOfDay:null, distance:null, pace:null, selected:null, tonight:false, nearMe:false, userLat:null, userLng:null };
 
 /* ── HELPERS ───────────────────────────────────────────────────────── */
 function scrollToApp() { document.getElementById('app').scrollIntoView({ behavior:'smooth' }); }
@@ -598,9 +615,8 @@ function makeIcon(club, selected) {
 const markers = {};
 CLUBS.forEach(c => {
   const m = L.marker([c.lat, c.lng], { icon: makeIcon(c, false) }).addTo(map)
-    .bindPopup(`<div class="popup-name">${c.name}</div><div class="popup-row">📅 <span>${c.days.join(', ')} · ${c.time}</span></div><div class="popup-row">⏱ <span>${c.pace}</span></div><div class="popup-row">📍 <span>${c.meet}</span></div>`);
+    .bindPopup(`<div class="popup-name">${c.name}</div><div class="popup-row">📅 <span>${c.days.join(', ')} · ${c.time}</span></div><div class="popup-row">⏱ <span>${c.pace}</span></div><div class="popup-row">📏 <span>${c.distText}</span></div><div class="popup-row">📍 <span>${c.meet}</span></div>`);
   
-  // Stop propagation so clicking marker doesn't trigger the map 'click' event
   m.on('click', (e) => {
     L.DomEvent.stopPropagation(e);
     selectClub(c.id);
@@ -635,14 +651,18 @@ function buildPills(containerId, items, key) {
     el.appendChild(btn);
   });
 }
-buildPills('catFilter', Object.keys(CAT_COLORS), 'cat');
+
+buildPills('timeFilter', TIMEOFDAY, 'timeOfDay');
 buildPills('dayFilter', DAYS, 'day');
+buildPills('distFilter', DISTANCES, 'distance');
 buildPills('paceFilter', PACES, 'pace');
+buildPills('catFilter', Object.keys(CAT_COLORS), 'cat');
+
 
 document.getElementById('searchInput').addEventListener('input', e => { state.search = e.target.value.toLowerCase(); render(); });
 
 function resetFilters() {
-  Object.assign(state, { search:'', cat:null, day:null, pace:null, tonight:false, nearMe:false });
+  Object.assign(state, { search:'', cat:null, day:null, timeOfDay:null, distance:null, pace:null, tonight:false, nearMe:false });
   document.getElementById('searchInput').value = '';
   document.querySelectorAll('.pill.active').forEach(p => p.classList.remove('active'));
   document.getElementById('tonightBtn').textContent = 'Show';
@@ -659,6 +679,8 @@ function getFiltered() {
     if (state.search && !c.name.toLowerCase().includes(state.search) && !c.meet.toLowerCase().includes(state.search)) return false;
     if (state.cat   && c.category !== state.cat)              return false;
     if (state.day   && !c.days.includes(state.day))           return false;
+    if (state.timeOfDay && !c.timeFilter.includes(state.timeOfDay)) return false;
+    if (state.distance && !c.distFilter.includes(state.distance)) return false;
     if (state.pace  && !paceMatch(c.pace, state.pace))        return false;
     return true;
   });
@@ -673,7 +695,6 @@ function getFiltered() {
 
 /* ── AUTO-FIT MAP TO RESULTS ──────────────────────────────────────── */
 function fitVisibleMarkers(visibleList) {
-  // Only auto-zoom if we aren't currently viewing a specific club detail
   if (visibleList.length === 0 || state.selected) return;
   const bounds = L.latLngBounds(visibleList.map(c => [c.lat, c.lng]));
   map.flyToBounds(bounds, { padding: [50, 50], maxZoom: 14, duration: 0.65 });
@@ -710,6 +731,7 @@ function render() {
         <div class="c-tags">
           <span class="ctag ${c.free ? 'ctag-free' : 'ctag-paid'}">${c.free ? '✓ Free' : 'Paid'}</span>
           <span class="ctag" style="background:${color}13;color:${color}">${c.category}</span>
+          <span class="ctag ctag-dist">📏 ${c.distText}</span>
         </div>
       </div>
       ${c.link ? `<a class="c-link" href="${c.link}" target="_blank" rel="noopener" title="Visit website">↗</a>` : ''}
@@ -725,7 +747,6 @@ function render() {
   const visible = new Set(list.map(c => c.id));
   CLUBS.forEach(c => markers[c.id].setOpacity(visible.has(c.id) ? 1 : 0.08));
 
-  // Dynamically re-adjust bounds when filters change
   fitVisibleMarkers(list);
 }
 
@@ -735,7 +756,6 @@ function selectClub(id) {
   const club = CLUBS.find(c => c.id === id);
   CLUBS.forEach(c => markers[c.id].setIcon(makeIcon(c, c.id === id)));
   
-  // Fly slightly closer (level 16) for better context of exactly where the club meets
   map.flyTo([club.lat, club.lng], 16, { duration: 0.65 });
   markers[id].openPopup();
 
@@ -745,10 +765,12 @@ function selectClub(id) {
   document.getElementById('dDay').textContent   = club.days.join(', ');
   document.getElementById('dTime').textContent  = club.time;
   document.getElementById('dPace').textContent  = club.pace;
+  document.getElementById('dDist').textContent  = club.distText;
   document.getElementById('dCat').textContent   = club.category;
   document.getElementById('dMeet').textContent  = club.meet;
   document.getElementById('dFree').textContent  = club.free ? '✓ Free to join' : 'Paid / membership';
   document.getElementById('dDesc').textContent  = club.desc;
+  
   const link = document.getElementById('dLink');
   if (club.link) {
     link.href = club.link; link.style.display = 'inline-flex';
@@ -763,10 +785,7 @@ function closeDetail() {
   document.getElementById('detailPanel').classList.remove('visible');
   document.getElementById('hintPanel').style.display = 'block';
   CLUBS.forEach(c => markers[c.id].setIcon(makeIcon(c, false)));
-  
-  // Close the leaflet popup
   map.closePopup();
-  
   render();
 }
 
