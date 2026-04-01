@@ -71,7 +71,7 @@
     .hero-bg {
       position: absolute; inset: 0; z-index: 0;
       background-color: #0e1218;
-      background-image: url('https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=1920&auto=format&fit=crop&q=75');
+      background-image: url('image_0.png');
       background-size: cover; background-position: center 30%;
     }
     .hero-bg::after {
@@ -461,7 +461,7 @@ const CLUBS = [
   { id:5,  name:"LOVE THEM Running Club — Tue 5K",        category:"Community",  days:["Tuesday"],                       time:"evening",                 timeFilter:["Evening"],             distFilter:["Up to 5 km", "5–10 km"],     distText:"5 km",                  pace:"6:10–6:30",     meet:"Elias Cafe, Vinohrady",                     lat:50.0784, lng:14.4428, free:true,  desc:"Social 5km run at an easy, conversational pace. Welcoming community for beginners and casual runners.", link:"https://lovethemclub.com/" },
   { id:6,  name:"LOVE THEM Running Club — Sun 14K",       category:"Community",  days:["Sunday"],                        time:"morning",                 timeFilter:["Morning"],             distFilter:["10+ km"],                    distText:"14 km",                 pace:"6:10–6:30",     meet:"Elias Cafe, Vinohrady",                     lat:50.0786, lng:14.4428, free:true,  desc:"Longer 14km Sunday run from the same starting point. Same friendly, social vibe stretched over more distance.", link:"https://lovethemclub.com/" },
   { id:7,  name:"Founders Running Club (FRC)",            category:"Community",  days:["varies"],                        time:"weekly",                  timeFilter:["Morning", "Evening"],  distFilter:["5–10 km"],                   distText:"~5–8 km",               pace:"easy",          meet:"Lagom Bistro, Praha 8",                     lat:50.0945, lng:14.4530, free:true,  desc:"Easy runs followed by networking over coffee. Pets, friends, and family welcome. Popular with the startup and tech crowd.", link:"https://www.instagram.com/prague_founders_running_club/" },
-  { id:8,  name:"Nomilesnosmiles — Tue Community Run",    category:"Community",  days:["Tuesday"],                       time:"18:20",                   timeFilter:["Evening"],             distFilter:["5–10 km"],                   distText:"~8–10 km",              pace:"varied",        meet:"Praha (check socials for exact spot)",       lat:50.0810, lng:14.4310, free:true,  desc:"Community run with a strong local crew. Check their Instagram for the exact meeting point each week.", link:"https://www.instagram.com/nomilesnosmiles/" },
+  { id:8,  name:"Nomilesnosmiles — Tue Community Run",    category:"Community",  days:["Tuesday"],                       time:"18:20",                   pace:"varied",        distText:"~8–10 km",              timeFilter:["Evening"],             distFilter:["5–10 km"],                   meet:"Praha (check socials for exact spot)",       lat:50.0810, lng:14.4310, free:true,  desc:"Community run with a strong local crew. Check their Instagram for the exact meeting point each week.", link:"https://www.instagram.com/nomilesnosmiles/" },
   { id:9,  name:"Nomilesnosmiles — Wed Track",            category:"Community",  days:["Wednesday"],                     time:"18:00",                   timeFilter:["Evening"],             distFilter:["Track / Intervals"],         distText:"Track",                 pace:"varied",        meet:"Praha (check socials for exact spot)",       lat:50.0812, lng:14.4315, free:true,  desc:"Track-focused midweek session. Speed work and intervals in a group setting.", link:"https://www.instagram.com/nomilesnosmiles/" },
   { id:10, name:"Nomilesnosmiles — Sun Long Run",         category:"Community",  days:["Sunday"],                        time:"09:00",                   timeFilter:["Morning"],             distFilter:["10+ km"],                    distText:"15+ km",                pace:"easy",          meet:"Praha (check socials for exact spot)",       lat:50.0808, lng:14.4305, free:true,  desc:"Easy Sunday long run. Great way to close out the week with the crew.", link:"https://www.instagram.com/nomilesnosmiles/" },
   { id:11, name:"Groovy Girls Run Club",                  category:"Community",  days:["Wednesday"],                     time:"18:00",                   timeFilter:["Evening"],             distFilter:["Up to 5 km"],                distText:"4 km",                  pace:"7:00–7:10",     meet:"Supernova Bakehouse, Karlín",               lat:50.0928, lng:14.4452, free:true,  desc:"A running community specifically for female beginners. 4km run at a comfortable, non-intimidating pace. Supportive and encouraging.", link:"https://www.instagram.com/groovygirlsrunclub.prague/" },
@@ -484,13 +484,13 @@ const CLUBS = [
 
   // NEAR PRAGUE
   { id:22, name:"Rozběháme Kladno",                       category:"Near Prague", days:["Wednesday","Thursday","Saturday","Sunday"], time:"Wed/Thu/Sat 17:30 · Sun 09:00", timeFilter:["Morning", "Evening"], distFilter:["Varies / Social"], distText:"Varies", pace:"varied", meet:"Sletiště Kladno",                  lat:50.1384, lng:14.0926, free:true,  desc:"Highly active club in Kladno with 4 sessions per week. Known for canicross (running with dogs) workshops. Great community just outside the city.", link:"https://www.instagram.com/rozbehame.kladno/" },
-  { id:23, name:"OK Roztoky (Orienteering Club)",         category:"Near Prague", days:["Wednesday"],                     time:"17:00 summer / 16:30 winter", timeFilter:["Afternoon", "Evening"], distFilter:["Varies / Social"], distText:"Orienteering", pace:"varied", meet:"Roztoky u Prahy",                           lat:50.1594, lng:14.3980, free:false, desc:"Orienteering-focused club with training for both youth and adults. Wednesday sessions in the forests around Roztoky.", link:"https://www.okroztoky.cz" }
+  { id:23, name:"OK Roztoky (Orienteering Club)",         category:"Near Prague", days:["Wednesday"],                     time:"17:00 summer / 16:30 winter", pace:"varied",   distText:"Orienteering", timeFilter:["Afternoon", "Evening"], distFilter:["Varies / Social"], meet:"Roztoky u Prahy",                           lat:50.1594, lng:14.3980, free:false, desc:"Orienteering-focused club with training for both youth and adults. Wednesday sessions in the forests around Roztoky.", link:"https://www.okroztoky.cz" }
 ];
 
 /* ── STATE & CONSTANTS ─────────────────────────────────────────────── */
+const DAYS  = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 const TIMEOFDAY = ["Morning", "Afternoon", "Evening"];
 const DISTANCES = ["Up to 5 km", "5–10 km", "10+ km", "Track / Intervals", "Varies / Social"];
-const DAYS  = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 const PACES = ["< 5:00","5:00–6:00","6:00–7:00","7:00+","Social / varied"];
 
 const jsDay = new Date().getDay(); // 0=Sun ... 6=Sat
@@ -652,17 +652,16 @@ function buildPills(containerId, items, key) {
   });
 }
 
-buildPills('timeFilter', TIMEOFDAY, 'timeOfDay');
-buildPills('dayFilter', DAYS, 'day');
-buildPills('distFilter', DISTANCES, 'distance');
-buildPills('paceFilter', PACES, 'pace');
 buildPills('catFilter', Object.keys(CAT_COLORS), 'cat');
-
+buildPills('dayFilter', DAYS, 'day');
+buildPills('paceFilter', PACES, 'pace');
+buildPills('timeFilter', TIMEOFDAY, 'timeOfDay');
+buildPills('distFilter', DISTANCES, 'distance');
 
 document.getElementById('searchInput').addEventListener('input', e => { state.search = e.target.value.toLowerCase(); render(); });
 
 function resetFilters() {
-  Object.assign(state, { search:'', cat:null, day:null, timeOfDay:null, distance:null, pace:null, tonight:false, nearMe:false });
+  Object.assign(state, { search:'', cat:null, day:null, pace:null, tonight:false, nearMe:false });
   document.getElementById('searchInput').value = '';
   document.querySelectorAll('.pill.active').forEach(p => p.classList.remove('active'));
   document.getElementById('tonightBtn').textContent = 'Show';
@@ -679,9 +678,9 @@ function getFiltered() {
     if (state.search && !c.name.toLowerCase().includes(state.search) && !c.meet.toLowerCase().includes(state.search)) return false;
     if (state.cat   && c.category !== state.cat)              return false;
     if (state.day   && !c.days.includes(state.day))           return false;
+    if (state.pace  && !paceMatch(c.pace, state.pace))        return false;
     if (state.timeOfDay && !c.timeFilter.includes(state.timeOfDay)) return false;
     if (state.distance && !c.distFilter.includes(state.distance)) return false;
-    if (state.pace  && !paceMatch(c.pace, state.pace))        return false;
     return true;
   });
   if (state.nearMe && state.userLat != null) {
