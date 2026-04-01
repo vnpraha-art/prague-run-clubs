@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prague Run Clubs</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0d;
+      --surface: #161616;
+      --surface2: #1e1e1e;
+      --border: #2a2a2a;
+      --accent: #e8ff47;
+      --accent2: #ff6b35;
+      --text: #f0f0f0;
+      --muted: #888;
+      --card-radius: 12px;
+    }
+
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+    header {
+      position: relative; padding: 48px 40px 40px;
+      border-bottom: 1px solid var(--border); background: var(--bg); overflow: hidden;
+    }
+    header::before {
+      content: ''; position: absolute; top: -80px; right: -80px; width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(232,255,71,0.08) 0%, transparent 70%); pointer-events: none;
+    }
+    .header-inner { max-width: 1300px; margin: 0 auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+    .logo-block h1 { font-family: 'Bebas Neue', sans-serif; font-size: clamp(48px, 7vw, 88px); line-height: 0.9; letter-spacing: 2px; }
+    .logo-block h1 span { color: var(--accent); }
+    .logo-block p { margin-top: 12px; font-size: 15px; color: var(--muted); font-weight: 300; letter-spacing: 0.5px; }
+    .stats-row { display: flex; gap: 32px; }
+    .stat { text-align: right; }
+    .stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 36px; color: var(--accent); line-height: 1; }
+    .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; }
+
+    .main { max-width: 1300px; margin: 0 auto; padding: 32px 40px 64px; display: grid; grid-template-columns: 340px 1fr; gap: 24px; }
+    @media (max-width: 900px) { .main { grid-template-columns: 1fr; padding: 20px 16px 48px; } header { padding: 32px 20px; } .stats-row { display: none; } }
+
+    .sidebar { display: flex; flex-direction: column; gap: 16px; }
+    .filter-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--card-radius); padding: 20px; }
+    .filter-card h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); margin-bottom: 14px; }
+
+    .search-wrap { position: relative; }
+    .search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); width: 16px; height: 16px; }
+    .search-wrap input {
+      width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px 12px 10px 38px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; transition: border-color 0.2s;
+    }
+    .search-wrap input::placeholder { color: var(--muted); }
+    .search-wrap input:focus { border-color: var(--accent); }
+
+    .pill-group { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pill { padding: 6px 14px; border-radius: 100px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; transition: all 0.15s; }
+    .pill:hover { border-color: var(--accent); color: var(--accent); }
+    .pill.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
+
+    .reset-btn { width: 100%; padding: 10px; background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+    .reset-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+    .clubs-list { display: flex; flex-direction: column; gap: 10px; max-height: 480px; overflow-y: auto; padding-right: 4px; }
+    .clubs-list::-webkit-scrollbar { width: 4px; }
+    .clubs-list::-webkit-scrollbar-track { background: transparent; }
+    .clubs-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .club-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+    .club-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: transparent; transition: background 0.2s; }
+    .club-card:hover { border-color: rgba(232,255,71,0.3); }
+    .club-card:hover::before, .club-card.selected::before { background: var(--accent); }
+    .club-card.selected { border-color: rgba(232,255,71,0.5); background: rgba(232,255,71,0.04); }
+    .club-card-name { font-weight: 600; font-size: 14px; margin-bottom: 6px; line-height: 1.3; }
+    .club-card-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 500; }
+    .tag-day { background: rgba(232,255,71,0.1); color: var(--accent); }
+    .tag-pace { background: rgba(255,107,53,0.1); color: var(--accent2); }
+    .tag-free { background: rgba(100,220,120,0.1); color: #64dc78; }
+    .tag-paid { background: rgba(255,100,100,0.1); color: #ff8080; }
+
+    .no-results { text-align: center; padding: 32px; color: var(--muted); font-size: 14px; }
+
+    .right-col { display: flex; flex-direction: column; gap: 20px; }
+
+    .legend { display: flex; flex-wrap: wrap; gap: 12px; padding: 14px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--card-radius); }
+    .legend-item { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    #map { width: 100%; height: 520px; border-radius: var(--card-radius); border: 1px solid var(--border); z-index: 1; }
+
+    .leaflet-tile { filter: brightness(0.7) saturate(0.6); }
+    .leaflet-control-zoom a { background: var(--surface) !important; color: var(--text) !important; border-color: var(--border) !important; }
+    .leaflet-popup-content-wrapper { background: var(--surface) !important; border: 1px solid var(--border); border-radius: 10px !important; color: var(--text) !important; box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important; }
+    .leaflet-popup-tip { background: var(--surface) !important; }
+    .leaflet-popup-content { font-family: 'DM Sans', sans-serif; font-size: 13px; margin: 12px 16px !important; }
+    .popup-name { font-weight: 700; font-size: 15px; margin-bottom: 6px; color: var(--accent); }
+    .popup-row { color: var(--muted); margin-top: 3px; }
+    .popup-row span { color: var(--text); }
+
+    .detail-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--card-radius); padding: 24px; display: none; }
+    .detail-panel.visible { display: block; }
+    .detail-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+    .detail-name { font-family: 'Bebas Neue', sans-serif; font-size: 28px; line-height: 1.1; max-width: 80%; }
+    .detail-close { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--muted); cursor: pointer; padding: 6px 10px; font-size: 18px; line-height: 1; flex-shrink: 0; transition: all 0.2s; }
+    .detail-close:hover { color: var(--accent2); border-color: var(--accent2); }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .detail-field label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); display: block; margin-bottom: 4px; }
+    .detail-field p { font-size: 14px; font-weight: 500; }
+    .detail-desc { font-size: 14px; color: var(--muted); line-height: 1.7; border-top: 1px solid var(--border); padding-top: 16px; }
+    .detail-link { display: inline-block; margin-top: 14px; color: var(--accent); font-size: 13px; text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.2s; }
+    .detail-link:hover { border-color: var(--accent); }
+
+    .hint-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--card-radius); padding: 32px; text-align: center; }
+    .hint-panel strong { display: block; font-size: 18px; margin-bottom: 6px; }
+    .hint-panel p { color: var(--muted); font-size: 14px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo-block">
+      <h1>PRAGUE<br/><span>RUN CLUBS</span></h1>
+      <p>Find your crew. Hit the pavement. Every run counts.</p>
+    </div>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-num" id="statTotal">—</div><div class="stat-label">Clubs listed</div></div>
+      <div class="stat"><div class="stat-num" id="statFree">—</div><div class="stat-label">Free to join</div></div>
+      <div class="stat"><div class="stat-num">PHA</div><div class="stat-label">& Around</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="main">
+  <aside class="sidebar">
+    <div class="filter-card">
+      <h3>Search</h3>
+      <div class="search-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/></svg>
+        <input type="text" id="searchInput" placeholder="Club name or location…" />
+      </div>
+    </div>
+    <div class="filter-card">
+      <h3>Category</h3>
+      <div class="pill-group" id="catFilter"></div>
+    </div>
+    <div class="filter-card">
+      <h3>Day of Week</h3>
+      <div class="pill-group" id="dayFilter"></div>
+    </div>
+    <div class="filter-card">
+      <h3>Pace (min/km)</h3>
+      <div class="pill-group" id="paceFilter"></div>
+    </div>
+    <button class="reset-btn" onclick="resetFilters()">↺ Reset all filters</button>
+    <div class="filter-card">
+      <h3>Results (<span id="resultCount">0</span>)</h3>
+      <div class="clubs-list" id="clubsList"></div>
+    </div>
+  </aside>
+
+  <div class="right-col">
+    <div class="legend" id="legend"></div>
+    <div id="map"></div>
+    <div class="detail-panel" id="detailPanel">
+      <div class="detail-header">
+        <div class="detail-name" id="detailName"></div>
+        <button class="detail-close" onclick="closeDetail()">✕</button>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-field"><label>Day(s)</label><p id="detailDay"></p></div>
+        <div class="detail-field"><label>Time</label><p id="detailTime"></p></div>
+        <div class="detail-field"><label>Pace</label><p id="detailPace"></p></div>
+        <div class="detail-field"><label>Category</label><p id="detailCat"></p></div>
+        <div class="detail-field" style="grid-column:1/-1"><label>Meeting Point</label><p id="detailMeet"></p></div>
+        <div class="detail-field"><label>Entry</label><p id="detailFree"></p></div>
+      </div>
+      <div class="detail-desc" id="detailDesc"></div>
+      <a id="detailLink" class="detail-link" href="#" target="_blank">→ Visit website</a>
+    </div>
+    <div class="hint-panel" id="hintPanel">
+      <strong>Select a club</strong>
+      <p>Click a marker on the map or a card on the left to see full details.</p>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+
+const CAT_COLORS = {
+  "Community":   "#e8ff47",
+  "Brand":       "#ff6b35",
+  "Gym":         "#88aaff",
+  "Pro Center":  "#c084fc",
+  "Near Prague": "#34d399"
+};
+
+const CLUBS = [
+  // COMMUNITY
+  { id:1, name:"Prague Running Crew — Tuesday Track", category:"Community", days:["Tuesday"], time:"19:00–21:00", pace:"varied", meet:"Unyp Arena, Prague 9", lat:50.1015, lng:14.4872, free:true, desc:"Interval-focused speed sessions at the track. Open to all levels with structured goals. Part of the broader Prague Running Crew.", link:"#" },
+  { id:2, name:"Prague Running Crew — Saturday Group Run", category:"Community", days:["Saturday"], time:"Gather 8:45, start 9:30", pace:"varied", meet:"The Miners Coffee Bakery, Karlín", lat:50.0925, lng:14.4538, free:true, desc:"Social Saturday long run with route options: 7km (Groovy), 12km, and 18km. Coffee and bakery social before the start.", link:"#" },
+  { id:3, name:"Prague Social Runners — Wednesday Vltava", category:"Community", days:["Wednesday"], time:"18:30", pace:"social", meet:"Kavárna Liberál, Holešovice", lat:50.1020, lng:14.4380, free:true, desc:"9km flat route along the Vltava riverbank. Relaxed atmosphere, all welcome. One of Prague's most popular midweek social runs.", link:"#" },
+  { id:4, name:"Prague Social Runners — Saturday Stromovka", category:"Community", days:["Saturday"], time:"10:00", pace:"social", meet:"Výstaviště Main Gate", lat:50.1052, lng:14.4197, free:true, desc:"50-minute social run through Stromovka park. Casual, beginner-friendly, great for meeting the running community.", link:"#" },
+  { id:5, name:"LOVE THEM Running Club — Tuesday 5K", category:"Community", days:["Tuesday"], time:"evening", pace:"6:10–6:30", meet:"Elias Cafe, city center", lat:50.0850, lng:14.4220, free:true, desc:"Social 5km run at an easy, conversational pace. Welcoming community for beginners and casual runners.", link:"#" },
+  { id:6, name:"LOVE THEM Running Club — Sunday 14K", category:"Community", days:["Sunday"], time:"morning", pace:"6:10–6:30", meet:"Elias Cafe, city center", lat:50.0853, lng:14.4223, free:true, desc:"Longer 14km Sunday run from the same starting point. Same friendly, social vibe stretched over more distance.", link:"#" },
+  { id:7, name:"Founders Running Club (FRC)", category:"Community", days:["varies"], time:"weekly", pace:"easy", meet:"Lagom Bistro, Praha 8", lat:50.0952, lng:14.4601, free:true, desc:"Easy runs followed by networking over coffee. Pets, friends, and family welcome. Popular with the startup and tech crowd.", link:"#" },
+  { id:8, name:"Nomilesnosmiles — Tuesday Community Run", category:"Community", days:["Tuesday"], time:"18:20", pace:"varied", meet:"Praha (check socials)", lat:50.0800, lng:14.4300, free:true, desc:"Community run with a strong local crew. Check their Instagram for the exact meeting point each week.", link:"#" },
+  { id:9, name:"Nomilesnosmiles — Wednesday Track", category:"Community", days:["Wednesday"], time:"18:00", pace:"varied", meet:"Praha (check socials)", lat:50.0805, lng:14.4350, free:true, desc:"Track-focused midweek session. Speed work and intervals in a group setting.", link:"#" },
+  { id:10, name:"Nomilesnosmiles — Sunday Long Run", category:"Community", days:["Sunday"], time:"09:00", pace:"easy", meet:"Praha (check socials)", lat:50.0795, lng:14.4250, free:true, desc:"Easy Sunday long run. Great way to close out the week with the crew.", link:"#" },
+  { id:11, name:"Groovy Girls Run Club", category:"Community", days:["Wednesday"], time:"18:00", pace:"7:00–7:10", meet:"Supernova Bakehouse, Karlín", lat:50.0918, lng:14.4569, free:true, desc:"A running community specifically for female beginners. 4km run at a comfortable, non-intimidating pace. Supportive and encouraging environment.", link:"#" },
+  { id:12, name:"Viva Sports — Sunday Social 5K", category:"Community", days:["Sunday"], time:"morning", pace:"social", meet:"Praha (check socials)", lat:50.0760, lng:14.4190, free:true, desc:"5K run followed by breakfast and conversation. Combines fitness with community and good food.", link:"#" },
+
+  // BRAND
+  { id:13, name:"Nike Run Club — Mon & Thu Letná", category:"Brand", days:["Monday","Thursday"], time:"18:00 (start 18:15)", pace:"3 groups", meet:"NPC Letná, Letenské sady 32", lat:50.0990, lng:14.4173, free:true, desc:"Three pace groups for all levels. Structured sessions led by Nike pacers. One of the most established brand-run clubs in Prague.", link:"#" },
+  { id:14, name:"Nike Run Club — Bi-weekly Wednesday", category:"Brand", days:["Wednesday"], time:"18:00", pace:"varied", meet:"Nike Prague / Nike Chodov (alternates)", lat:50.0818, lng:14.4282, free:true, desc:"Alternating bi-weekly sessions from two store locations. Check Nike's channels for which store is running each week.", link:"#" },
+  { id:15, name:"Adidas Runners Prague", category:"Brand", days:["Tuesday","Thursday"], time:"18:00", pace:"varied", meet:"Adidas Runbase Karlín, Pobřežní 78", lat:50.0953, lng:14.4559, free:true, desc:"Twice-weekly runs from the Runbase. Registered members also get free strength training and yoga classes. One of the most active brand clubs in the city.", link:"#" },
+  { id:16, name:"Top4Running Club", category:"Brand", days:["Tuesday","Thursday"], time:"18:00", pace:"varied", meet:"Top4Running, Náplavní 1", lat:50.0762, lng:14.4143, free:true, desc:"Coach-led workouts twice a week for beginners and experienced runners alike. Free, no registration needed — just show up.", link:"https://www.top4running.cz" },
+  { id:17, name:"Trailpoint Run Club", category:"Brand", days:["varies"], time:"18:00", pace:"trail", meet:"Trailpoint store, Jirečkova 7, Letná", lat:50.1011, lng:14.4249, free:true, desc:"Trail-focused sessions departing from Letná. Includes terrain runs, headlamp testing, and specialized workshops. Great for anyone wanting to go off-road.", link:"#" },
+
+  // GYM
+  { id:18, name:"Next.Move Run Club", category:"Gym", days:["Sunday"], time:"17:00", pace:"3 groups", meet:"Next.Move Karlín, Rohanské nábřeží 713/8", lat:50.0960, lng:14.4520, free:true, desc:"Free and open to members and non-members alike. Three pace groups: beginner, intermediate, advanced. One of the most accessible gym-based run clubs in Prague.", link:"#" },
+  { id:19, name:"Esse Athletes", category:"Gym", days:["Thursday","Sunday"], time:"Thu: evening / Sun: morning", pace:"~6:00 (long run)", meet:"Prague Congress Center (Metro Vyšehrad)", lat:50.0627, lng:14.4179, free:false, desc:"Performance and marathon-focused training. Thursday: structured tempo/intervals and fartleks. Sunday: easy-paced long runs. Geared toward competitive and goal-oriented runners.", link:"#" },
+
+  // PRO CENTER
+  { id:20, name:"Running Mall (RunCzech Training Center)", category:"Pro Center", days:["Monday","Wednesday","Friday"], time:"various", pace:"structured", meet:"Františka Křížka 11, Praha 7", lat:50.1008, lng:14.4330, free:false, desc:"Fee-based structured programs: Wake Up Run (aerobic base), Sunrise Run (bi-weekly Fridays, intervals + hills), VO2max Boost, and Running Technique workshops. Official RunCzech training center.", link:"https://runczech.com" },
+  { id:21, name:"Mattoni FreeRun", category:"Pro Center", days:["Monday"], time:"18:00", pace:"varied", meet:"Stromovka Park", lat:50.1041, lng:14.4213, free:true, desc:"Free coach-led training sessions in Stromovka every Monday. Structured workout with professional guidance at no cost.", link:"#" },
+
+  // NEAR PRAGUE
+  { id:22, name:"Rozběháme Kladno", category:"Near Prague", days:["Wednesday","Thursday","Saturday","Sunday"], time:"Wed/Thu/Sat 17:30 · Sun 09:00", pace:"varied", meet:"Sletiště Kladno", lat:50.1439, lng:14.1066, free:true, desc:"Highly active club in Kladno with 4 sessions per week. Known for canicross (running with dogs) workshops. Great community just outside the city.", link:"#" },
+  { id:23, name:"OK Roztoky (Orienteering Club)", category:"Near Prague", days:["Wednesday"], time:"17:00 summer / 16:30 winter", pace:"varied", meet:"Roztoky u Prahy", lat:50.1583, lng:14.3944, free:false, desc:"Orienteering-focused club with training for both youth and adults. Wednesday sessions in the forests around Roztoky. Develops navigation and cross-country running skills.", link:"#" }
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+const state = { search:"", cat:null, day:null, pace:null, selected:null };
+const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const PACES = ["< 5:00","5:00–6:00","6:00–7:00","7:00+","Social / varied"];
+
+// ── MAP ───────────────────────────────────────────────────────────────────────
+const map = L.map('map').setView([50.082, 14.43], 12);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap contributors' }).addTo(map);
+
+function makeIcon(club, selected) {
+  const color = CAT_COLORS[club.category] || "#fff";
+  const s = selected ? 20 : 13;
+  return L.divIcon({
+    className:'',
+    html:`<div style="width:${s}px;height:${s}px;background:${color};border-radius:50%;border:2px solid ${selected?'#fff':color+'55'};box-shadow:0 0 ${selected?16:6}px ${selected?5:2}px ${color}${selected?'aa':'44'};transition:all 0.2s;"></div>`,
+    iconSize:[s,s], iconAnchor:[s/2,s/2]
+  });
+}
+
+const markers = {};
+CLUBS.forEach(c => {
+  const m = L.marker([c.lat, c.lng], { icon: makeIcon(c, false) }).addTo(map)
+    .bindPopup(`<div class="popup-name">${c.name}</div><div class="popup-row">📅 <span>${c.days.join(', ')} · ${c.time}</span></div><div class="popup-row">⏱ <span>${c.pace}</span></div><div class="popup-row">📍 <span>${c.meet}</span></div>`);
+  m.on('click', () => selectClub(c.id));
+  markers[c.id] = m;
+});
+
+// ── LEGEND ────────────────────────────────────────────────────────────────────
+const legendEl = document.getElementById('legend');
+Object.entries(CAT_COLORS).forEach(([cat, color]) => {
+  legendEl.innerHTML += `<div class="legend-item"><div class="legend-dot" style="background:${color}"></div>${cat}</div>`;
+});
+
+// ── PILLS ─────────────────────────────────────────────────────────────────────
+function buildPills(id, items, key) {
+  const el = document.getElementById(id);
+  items.forEach(item => {
+    const btn = document.createElement('button');
+    btn.className = 'pill'; btn.textContent = item;
+    btn.onclick = () => {
+      state[key] = state[key] === item ? null : item;
+      el.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+      if (state[key]) btn.classList.add('active');
+      render();
+    };
+    el.appendChild(btn);
+  });
+}
+buildPills('catFilter', Object.keys(CAT_COLORS), 'cat');
+buildPills('dayFilter', DAYS, 'day');
+buildPills('paceFilter', PACES, 'pace');
+
+document.getElementById('searchInput').addEventListener('input', e => { state.search = e.target.value.toLowerCase(); render(); });
+
+function resetFilters() {
+  state.search=''; state.cat=null; state.day=null; state.pace=null;
+  document.getElementById('searchInput').value='';
+  document.querySelectorAll('.pill.active').forEach(p => p.classList.remove('active'));
+  render();
+}
+
+// ── PACE MATCH ────────────────────────────────────────────────────────────────
+function paceMatch(clubPace, filter) {
+  if (!filter) return true;
+  const p = clubPace.toLowerCase();
+  const isText = isNaN(parseFloat(p));
+  if (filter === "Social / varied") return isText;
+  if (isText) return false;
+  const num = parseFloat(p);
+  if (filter === "< 5:00") return num < 5;
+  if (filter === "5:00–6:00") return num >= 5 && num < 6;
+  if (filter === "6:00–7:00") return num >= 6 && num < 7;
+  if (filter === "7:00+") return num >= 7;
+  return false;
+}
+
+// ── FILTERED ──────────────────────────────────────────────────────────────────
+function filtered() {
+  return CLUBS.filter(c => {
+    if (state.search && !c.name.toLowerCase().includes(state.search) && !c.meet.toLowerCase().includes(state.search)) return false;
+    if (state.cat && c.category !== state.cat) return false;
+    if (state.day && !c.days.includes(state.day)) return false;
+    if (state.pace && !paceMatch(c.pace, state.pace)) return false;
+    return true;
+  });
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render() {
+  const list = filtered();
+  const container = document.getElementById('clubsList');
+  document.getElementById('resultCount').textContent = list.length;
+  container.innerHTML = '';
+
+  if (!list.length) { container.innerHTML = '<div class="no-results">No clubs match your filters.</div>'; }
+
+  list.forEach(c => {
+    const color = CAT_COLORS[c.category];
+    const card = document.createElement('div');
+    card.className = 'club-card' + (state.selected === c.id ? ' selected' : '');
+    card.innerHTML = `
+      <div class="club-card-name">${c.name}</div>
+      <div class="club-card-meta">
+        <span class="tag tag-day">${c.days[0]}${c.days.length > 1 ? ' +' + (c.days.length-1) : ''}</span>
+        <span class="tag tag-pace">${c.pace}</span>
+        <span class="tag" style="background:${color}18;color:${color}">${c.category}</span>
+        <span class="tag ${c.free ? 'tag-free' : 'tag-paid'}">${c.free ? 'Free' : 'Paid'}</span>
+      </div>`;
+    card.onclick = () => selectClub(c.id);
+    container.appendChild(card);
+  });
+
+  const visibleIds = new Set(list.map(c => c.id));
+  CLUBS.forEach(c => markers[c.id].setOpacity(visibleIds.has(c.id) ? 1 : 0.12));
+}
+
+// ── SELECT ────────────────────────────────────────────────────────────────────
+function selectClub(id) {
+  state.selected = id;
+  const club = CLUBS.find(c => c.id === id);
+  CLUBS.forEach(c => markers[c.id].setIcon(makeIcon(c, c.id === id)));
+  map.flyTo([club.lat, club.lng], 15, { duration: 0.7 });
+  markers[id].openPopup();
+
+  document.getElementById('hintPanel').style.display = 'none';
+  const panel = document.getElementById('detailPanel');
+  panel.classList.add('visible');
+  document.getElementById('detailName').textContent = club.name;
+  document.getElementById('detailDay').textContent = club.days.join(', ');
+  document.getElementById('detailTime').textContent = club.time;
+  document.getElementById('detailPace').textContent = club.pace;
+  document.getElementById('detailCat').textContent = club.category;
+  document.getElementById('detailMeet').textContent = club.meet;
+  document.getElementById('detailFree').textContent = club.free ? '✓ Free to join' : 'Paid / membership';
+  document.getElementById('detailDesc').textContent = club.desc;
+  const link = document.getElementById('detailLink');
+  link.href = club.link; link.style.display = club.link === '#' ? 'none' : 'inline-block';
+  render();
+}
+
+function closeDetail() {
+  state.selected = null;
+  document.getElementById('detailPanel').classList.remove('visible');
+  document.getElementById('hintPanel').style.display = 'block';
+  CLUBS.forEach(c => markers[c.id].setIcon(makeIcon(c, false)));
+  render();
+}
+
+// INIT
+document.getElementById('statTotal').textContent = CLUBS.length;
+document.getElementById('statFree').textContent = CLUBS.filter(c => c.free).length;
+render();
+</script>
+</body>
+</html>
