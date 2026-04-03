@@ -134,11 +134,12 @@
     .app { display: grid; grid-template-columns: 370px 1fr; }
 
     .sidebar {
-      position: sticky; top: 58px; height: calc(100vh - 58px);
-      overflow-y: auto; overflow-x: hidden;
-      background: var(--s1); border-right: 1px solid var(--border);
-      padding: 16px 16px;
-      display: flex; flex-direction: column; gap: 0;
+  position: sticky; top: 58px; height: calc(100vh - 58px);
+  overflow-y: auto; overflow-x: hidden;
+  background: var(--s1); border-right: 1px solid var(--border);
+  padding: 16px 16px;
+  /* Removed the flexbox properties here */
+}
     }
     .sidebar::-webkit-scrollbar { width: 3px; }
     .sidebar::-webkit-scrollbar-track { background: transparent; }
