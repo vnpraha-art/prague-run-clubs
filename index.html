@@ -198,10 +198,12 @@
     .ftb-chevron.open { transform: rotate(180deg); }
 
     .filters-body {
-      overflow: hidden;
-      max-height: 0;
-      transition: max-height 0.32s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
-      opacity: 0;
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.32s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+  opacity: 0;
+  flex-shrink: 0; /* Prevents the desktop sidebar from crushing the open container */
+}
     }
     .filters-body.open {
       max-height: 1000px;
