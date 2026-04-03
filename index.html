@@ -137,7 +137,7 @@
       position: sticky; top: 58px; height: calc(100vh - 58px);
       overflow-y: auto; overflow-x: hidden;
       background: var(--s1); border-right: 1px solid var(--border);
-      padding: 20px 16px;
+      padding: 16px 16px;
       display: flex; flex-direction: column; gap: 0;
     }
     .sidebar::-webkit-scrollbar { width: 3px; }
@@ -149,7 +149,7 @@
       background: rgba(232,255,71,0.05); border: 1px solid rgba(232,255,71,0.18);
       border-radius: var(--r); padding: 14px 16px;
       display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 18px; gap: 12px;
+      margin-bottom: 14px; gap: 12px;
     }
     .tonight-left { display: flex; align-items: center; gap: 11px; }
     .tonight-pulse {
@@ -172,11 +172,47 @@
     .btn-tonight-filter:hover { background: #d8ef30; }
     .btn-tonight-filter.active { background: var(--accent2); color: #fff; }
 
-    /* ─── FILTERS ────────────────────────────────────────────────── */
-    .f-block { padding-bottom: 16px; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
-    .f-block:last-of-type { border-bottom: none; margin-bottom: 0; }
+    /* ─── COLLAPSIBLE FILTERS ───────────────────────────────────── */
+    .filters-toggle-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 0; margin-bottom: 4px; cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      user-select: none;
+    }
+    .filters-toggle-bar:hover .ftb-label { color: var(--accent); }
+    .ftb-left { display: flex; align-items: center; gap: 8px; }
+    .ftb-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 2px; color: var(--muted); transition: color 0.15s;
+    }
+    .ftb-active-count {
+      display: none; align-items: center; justify-content: center;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--accent); color: #000;
+      font-size: 10px; font-weight: 800; line-height: 1;
+    }
+    .ftb-active-count.visible { display: flex; }
+    .ftb-chevron {
+      font-size: 11px; color: var(--muted2); transition: transform 0.25s ease;
+    }
+    .ftb-chevron.open { transform: rotate(180deg); }
+
+    .filters-body {
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.32s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+      opacity: 0;
+    }
+    .filters-body.open {
+      max-height: 1000px;
+      opacity: 1;
+    }
+
+    .f-block { padding: 14px 0; border-bottom: 1px solid var(--border); }
+    .f-block:last-of-type { border-bottom: none; padding-bottom: 0; }
     .f-label { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: var(--muted2); font-weight: 600; margin-bottom: 10px; }
 
+    .search-wrap { margin-bottom: 14px; }
     .search-box {
       width: 100%; background: var(--s2); border: 1px solid var(--border);
       border-radius: var(--r-sm); padding: 9px 13px; color: var(--text);
@@ -207,7 +243,7 @@
     .btn-reset {
       width: 100%; padding: 9px; background: transparent; border: 1px solid var(--border);
       border-radius: var(--r-sm); color: var(--muted); font-family: 'DM Sans', sans-serif;
-      font-size: 12px; cursor: pointer; transition: all 0.2s; margin-bottom: 18px;
+      font-size: 12px; cursor: pointer; transition: all 0.2s; margin-bottom: 16px;
     }
     .btn-reset:hover { border-color: var(--accent2); color: var(--accent2); }
 
@@ -275,30 +311,88 @@
     .popup-row { color: var(--muted); margin-top: 3px; }
     .popup-row span { color: var(--text); }
 
-    /* ─── DETAIL PANEL ────────────────────────────────────────────── */
-    .detail-wrap { flex-shrink: 0; border-top: 1px solid var(--border); }
-    .detail-panel { background: var(--s1); padding: 20px 22px; display: none; }
-    .detail-panel.visible { display: block; }
-    .dh { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
-    .d-name { font-family: 'Bebas Neue', sans-serif; font-size: 26px; line-height: 1.1; }
-    .d-close { background: var(--s2); border: 1px solid var(--border); border-radius: 6px; color: var(--muted); cursor: pointer; padding: 5px 9px; font-size: 16px; line-height: 1; transition: all 0.15s; }
-    .d-close:hover { color: var(--accent2); border-color: var(--accent2); }
-    .d-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
-    .d-field label { font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted2); display: block; margin-bottom: 3px; }
-    .d-field p { font-size: 13px; font-weight: 500; }
-    .d-meet { grid-column: 1 / -1; }
-    .d-desc { font-size: 13px; color: var(--muted); line-height: 1.7; border-top: 1px solid var(--border); padding-top: 12px; margin-bottom: 12px; }
-    .d-link {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 8px 18px; background: var(--accent); color: #000;
-      font-size: 13px; font-weight: 700; text-decoration: none;
-      border-radius: 100px; transition: all 0.2s;
+    /* ─── MODAL OVERLAY ─────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 2000;
+      background: rgba(0,0,0,0.72); backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.22s ease;
     }
-    .d-link:hover { background: #d8ef30; }
+    .modal-overlay.visible {
+      opacity: 1; pointer-events: all;
+    }
 
-    .hint-panel { background: var(--s1); border-top: 1px solid var(--border); padding: 28px; text-align: center; }
-    .hint-panel strong { display: block; font-size: 15px; margin-bottom: 5px; }
-    .hint-panel p { color: var(--muted); font-size: 13px; }
+    .modal {
+      background: var(--s1); border: 1px solid var(--border);
+      border-radius: 18px; width: 100%; max-width: 560px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.04);
+      overflow: hidden;
+      transform: translateY(16px) scale(0.97);
+      transition: transform 0.28s cubic-bezier(0.34, 1.36, 0.64, 1);
+    }
+    .modal-overlay.visible .modal {
+      transform: translateY(0) scale(1);
+    }
+
+    .modal-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      padding: 22px 24px 0; gap: 16px;
+    }
+    .modal-cat-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 5px;
+    }
+    .modal-name-wrap { flex: 1; min-width: 0; }
+    .modal-name {
+      font-family: 'Bebas Neue', sans-serif; font-size: 28px; line-height: 1.05;
+      color: var(--text); margin-bottom: 4px;
+    }
+    .modal-cat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; }
+
+    .modal-close {
+      background: var(--s2); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--muted); cursor: pointer; padding: 7px 10px;
+      font-size: 16px; line-height: 1; transition: all 0.15s; flex-shrink: 0;
+    }
+    .modal-close:hover { color: var(--accent2); border-color: var(--accent2); }
+
+    .modal-divider { height: 1px; background: var(--border); margin: 16px 24px; }
+
+    .modal-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 12px; padding: 0 24px;
+    }
+    .modal-field label {
+      font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px;
+      color: var(--muted2); display: block; margin-bottom: 4px;
+    }
+    .modal-field p { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.4; }
+    .modal-field.span-full { grid-column: 1 / -1; }
+
+    .modal-desc {
+      font-size: 13px; color: var(--muted); line-height: 1.75;
+      padding: 14px 24px; border-top: 1px solid var(--border); margin-top: 14px;
+    }
+
+    .modal-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 24px 20px; gap: 12px;
+    }
+    .modal-free-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 12px; font-weight: 700; padding: 5px 12px;
+      border-radius: 100px;
+    }
+    .modal-free-badge.free { background: rgba(100,220,120,0.12); color: #64dc78; }
+    .modal-free-badge.paid { background: rgba(255,100,100,0.12); color: #ff8080; }
+    .modal-visit {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 10px 22px; background: var(--accent); color: #000;
+      font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700;
+      text-decoration: none; border-radius: 100px; transition: all 0.2s;
+    }
+    .modal-visit:hover { background: #d8ef30; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(232,255,71,0.2); }
 
     /* ─── RESPONSIVE ─────────────────────────────────────────────── */
     @media (max-width: 960px) {
@@ -309,6 +403,8 @@
       .hero-h1 { font-size: clamp(64px, 16vw, 100px); }
       .hero-stats { display: none; }
       .nav { padding: 0 16px; }
+      .modal { max-width: 100%; }
+      .modal-grid { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
@@ -367,40 +463,53 @@
       <button class="btn-tonight-filter" id="tonightBtn" onclick="toggleTonight()">Show</button>
     </div>
 
-    <div class="f-block">
-      <div class="f-label">Search</div>
-      <input class="search-box" type="text" id="searchInput" placeholder="Club name or location…" />
+    <!-- Search always visible -->
+    <div class="search-wrap">
+      <input class="search-box" type="text" id="searchInput" placeholder="Search club name or location…" />
     </div>
 
-    <div class="f-block">
-      <div class="f-label">Time of Day</div>
-      <div class="pills" id="timeFilter"></div>
+    <!-- Collapsible filter section -->
+    <div class="filters-toggle-bar" id="filtersToggle" onclick="toggleFilters()">
+      <div class="ftb-left">
+        <span class="ftb-label">Filters</span>
+        <span class="ftb-active-count" id="filterCount"></span>
+      </div>
+      <span class="ftb-chevron" id="filtersChevron">▼</span>
     </div>
 
-    <div class="f-block">
-      <div class="f-label">Day</div>
-      <div class="pills" id="dayFilter"></div>
-    </div>
+    <div class="filters-body" id="filtersBody">
 
-    <div class="f-block">
-      <div class="f-label">Distance</div>
-      <div class="pills" id="distFilter"></div>
-    </div>
+      <div class="f-block">
+        <div class="f-label">Time of Day</div>
+        <div class="pills" id="timeFilter"></div>
+      </div>
 
-    <div class="f-block">
-      <div class="f-label">Pace (min/km)</div>
-      <div class="pills" id="paceFilter"></div>
-    </div>
-    
-    <div class="f-block">
-      <div class="f-label">Category</div>
-      <div class="pills" id="catFilter"></div>
-    </div>
+      <div class="f-block">
+        <div class="f-label">Day</div>
+        <div class="pills" id="dayFilter"></div>
+      </div>
 
-    <button class="btn-near-sidebar" id="nearSideBtn" onclick="toggleNearMe()">📍 Sort by distance from me</button>
-    <button class="btn-reset" onclick="resetFilters()">↺ Reset all filters</button>
+      <div class="f-block">
+        <div class="f-label">Distance</div>
+        <div class="pills" id="distFilter"></div>
+      </div>
 
-    <div class="results-row">
+      <div class="f-block">
+        <div class="f-label">Pace (min/km)</div>
+        <div class="pills" id="paceFilter"></div>
+      </div>
+
+      <div class="f-block">
+        <div class="f-label">Category</div>
+        <div class="pills" id="catFilter"></div>
+      </div>
+
+      <button class="btn-near-sidebar" id="nearSideBtn" onclick="toggleNearMe()">📍 Sort by distance from me</button>
+      <button class="btn-reset" onclick="resetFilters()">↺ Reset all filters</button>
+
+    </div><!-- /filters-body -->
+
+    <div class="results-row" style="margin-top: 14px;">
       <span class="results-lbl">Results</span>
       <span class="results-n" id="resultCount">0</span>
     </div>
@@ -411,30 +520,61 @@
   <div class="map-col">
     <div class="legend-bar" id="legend"></div>
     <div id="map"></div>
-    <div class="detail-wrap">
-      <div class="detail-panel" id="detailPanel">
-        <div class="dh">
-          <div class="d-name" id="dName"></div>
-          <button class="d-close" onclick="closeDetail()">✕</button>
+  </div>
+</div>
+
+<!-- ─── MODAL ──────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div style="display:flex;align-items:flex-start;gap:10px;flex:1;min-width:0;">
+        <div class="modal-cat-dot" id="mCatDot"></div>
+        <div class="modal-name-wrap">
+          <div class="modal-name" id="mName"></div>
+          <div class="modal-cat-label" id="mCatLabel"></div>
         </div>
-        <div class="d-grid">
-          <div class="d-field"><label>Day(s)</label><p id="dDay"></p></div>
-          <div class="d-field"><label>Time</label><p id="dTime"></p></div>
-          <div class="d-field"><label>Pace</label><p id="dPace"></p></div>
-          
-          <div class="d-field"><label>Distance</label><p id="dDist"></p></div>
-          <div class="d-field"><label>Category</label><p id="dCat"></p></div>
-          <div class="d-field"><label>Entry</label><p id="dFree"></p></div>
-          
-          <div class="d-field d-meet"><label>Meeting Point</label><p id="dMeet"></p></div>
-        </div>
-        <div class="d-desc" id="dDesc"></div>
-        <a id="dLink" class="d-link" href="#" target="_blank" rel="noopener">↗ Visit website</a>
       </div>
-      <div class="hint-panel" id="hintPanel">
-        <strong>Select a club</strong>
-        <p>Click a marker on the map or a card on the left.</p>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <div class="modal-divider"></div>
+
+    <div class="modal-grid">
+      <div class="modal-field">
+        <label>Day(s)</label>
+        <p id="mDay"></p>
       </div>
+      <div class="modal-field">
+        <label>Time</label>
+        <p id="mTime"></p>
+      </div>
+      <div class="modal-field">
+        <label>Pace</label>
+        <p id="mPace"></p>
+      </div>
+      <div class="modal-field">
+        <label>Distance</label>
+        <p id="mDist"></p>
+      </div>
+      <div class="modal-field">
+        <label>Entry</label>
+        <p id="mFree"></p>
+      </div>
+      <div class="modal-field">
+        <label>Category</label>
+        <p id="mCat"></p>
+      </div>
+      <div class="modal-field span-full">
+        <label>Meeting Point</label>
+        <p id="mMeet"></p>
+      </div>
+    </div>
+
+    <div class="modal-desc" id="mDesc"></div>
+
+    <div class="modal-footer">
+      <span class="modal-free-badge" id="mFreeBadge"></span>
+      <a id="mLink" class="modal-visit" href="#" target="_blank" rel="noopener">↗ Visit website</a>
     </div>
   </div>
 </div>
@@ -451,40 +591,30 @@ const CAT_COLORS = {
   "Near Prague": "#34d399"
 };
 
-// Offset identical coordinates (by ±0.0002) so markers don't perfectly stack
 const CLUBS = [
-  // COMMUNITY
   { id:1,  name:"Prague Running Crew — Track Tuesday",    category:"Community",  days:["Tuesday"],                       time:"19:00–21:00",            timeFilter:["Evening"],             distFilter:["Track / Intervals"],         distText:"Track",                 pace:"varied",        meet:"Unyp Arena, Prague 9",                      lat:50.1077, lng:14.4820, free:true,  desc:"Interval-focused speed sessions at the track. Open to all levels with structured goals. Part of the broader Prague Running Crew.", link:"https://www.instagram.com/praguerunningcrew/" },
   { id:2,  name:"Prague Running Crew — Saturday Run",     category:"Community",  days:["Saturday"],                      time:"Gather 8:45, start 9:30", timeFilter:["Morning"],             distFilter:["5–10 km", "10+ km"],         distText:"7, 12, or 18 km",       pace:"varied",        meet:"The Miners Coffee Bakery, Karlín",           lat:50.0934, lng:14.4485, free:true,  desc:"Social Saturday long run with route options: 7km (Groovy), 12km, and 18km. Coffee and bakery social before the start.", link:"https://www.instagram.com/praguerunningcrew/" },
   { id:3,  name:"Prague Social Runners — Wed Vltava",     category:"Community",  days:["Wednesday"],                     time:"18:30",                   timeFilter:["Evening"],             distFilter:["5–10 km"],                   distText:"9 km",                  pace:"social",        meet:"Kavárna Liberál, Holešovice",               lat:50.0991, lng:14.4355, free:true,  desc:"9km flat route along the Vltava riverbank. Relaxed atmosphere, all welcome. One of Prague's most popular midweek social runs.", link:"https://www.instagram.com/praguesocialrunners/" },
   { id:4,  name:"Prague Social Runners — Sat Stromovka",  category:"Community",  days:["Saturday"],                      time:"10:00",                   timeFilter:["Morning"],             distFilter:["5–10 km"],                   distText:"~8 km",                 pace:"social",        meet:"Výstaviště Main Gate, Holešovice",           lat:50.1065, lng:14.4320, free:true,  desc:"50-minute social run through Stromovka park. Casual, beginner-friendly, great for meeting the running community.", link:"https://www.instagram.com/praguesocialrunners/" },
   { id:5,  name:"LOVE THEM Running Club — Tue 5K",        category:"Community",  days:["Tuesday"],                       time:"evening",                 timeFilter:["Evening"],             distFilter:["Up to 5 km", "5–10 km"],     distText:"5 km",                  pace:"6:10–6:30",     meet:"Elias Cafe, Vinohrady",                     lat:50.0784, lng:14.4428, free:true,  desc:"Social 5km run at an easy, conversational pace. Welcoming community for beginners and casual runners.", link:"https://lovethemclub.com/" },
-  { id:6,  name:"LOVE THEM Running Club — Sun 14K",       category:"Community",  days:["Sunday"],                        time:"morning",                 timeFilter:["Morning"],             distFilter:["10+ km"],                    distText:"14 km",                 pace:"6:10–6:30",     meet:"Elias Cafe, Vinohrady",                     lat:50.0786, lng:14.4428, free:true,  desc:"Longer 14km Sunday run from the same starting point. Same friendly, social vibe stretched over more distance.", link:"https://lovethemclub.com/" },
+  { id:6,  name:"LOVE THEM Running Club — Sun 14K",       category:"Community",  days:["Sunday"],                        time:"morning",                 timeFilter:["Morning"],             distFilter:["10+ km"],                    distText:"14 km",                 pace:"6:10–6:30",     meet:"Elias Cafe, Vinohrady",                     lat:50.0786, lng:14.4430, free:true,  desc:"Longer 14km Sunday run from the same starting point. Same friendly, social vibe stretched over more distance.", link:"https://lovethemclub.com/" },
   { id:7,  name:"Founders Running Club (FRC)",            category:"Community",  days:["varies"],                        time:"weekly",                  timeFilter:["Morning", "Evening"],  distFilter:["5–10 km"],                   distText:"~5–8 km",               pace:"easy",          meet:"Lagom Bistro, Praha 8",                     lat:50.0945, lng:14.4530, free:true,  desc:"Easy runs followed by networking over coffee. Pets, friends, and family welcome. Popular with the startup and tech crowd.", link:"https://www.instagram.com/prague_founders_running_club/" },
   { id:8,  name:"Nomilesnosmiles — Tue Community Run",    category:"Community",  days:["Tuesday"],                       time:"18:20",                   timeFilter:["Evening"],             distFilter:["5–10 km"],                   distText:"~8–10 km",              pace:"varied",        meet:"Praha (check socials for exact spot)",       lat:50.0810, lng:14.4310, free:true,  desc:"Community run with a strong local crew. Check their Instagram for the exact meeting point each week.", link:"https://www.instagram.com/nomilesnosmiles/" },
   { id:9,  name:"Nomilesnosmiles — Wed Track",            category:"Community",  days:["Wednesday"],                     time:"18:00",                   timeFilter:["Evening"],             distFilter:["Track / Intervals"],         distText:"Track",                 pace:"varied",        meet:"Praha (check socials for exact spot)",       lat:50.0812, lng:14.4315, free:true,  desc:"Track-focused midweek session. Speed work and intervals in a group setting.", link:"https://www.instagram.com/nomilesnosmiles/" },
   { id:10, name:"Nomilesnosmiles — Sun Long Run",         category:"Community",  days:["Sunday"],                        time:"09:00",                   timeFilter:["Morning"],             distFilter:["10+ km"],                    distText:"15+ km",                pace:"easy",          meet:"Praha (check socials for exact spot)",       lat:50.0808, lng:14.4305, free:true,  desc:"Easy Sunday long run. Great way to close out the week with the crew.", link:"https://www.instagram.com/nomilesnosmiles/" },
   { id:11, name:"Groovy Girls Run Club",                  category:"Community",  days:["Wednesday"],                     time:"18:00",                   timeFilter:["Evening"],             distFilter:["Up to 5 km"],                distText:"4 km",                  pace:"7:00–7:10",     meet:"Supernova Bakehouse, Karlín",               lat:50.0928, lng:14.4452, free:true,  desc:"A running community specifically for female beginners. 4km run at a comfortable, non-intimidating pace. Supportive and encouraging.", link:"https://www.instagram.com/groovygirlsrunclub.prague/" },
   { id:12, name:"Viva Sports — Sunday Social 5K",         category:"Community",  days:["Sunday"],                        time:"morning",                 timeFilter:["Morning"],             distFilter:["Up to 5 km", "5–10 km"],     distText:"5 km",                  pace:"social",        meet:"Praha (check socials for exact spot)",       lat:50.0760, lng:14.4190, free:true,  desc:"5K run followed by breakfast and conversation. Combines fitness with community and good food.", link:"https://www.vivasports.cz/" },
-
-  // BRAND
   { id:13, name:"Nike Run Club — Mon & Thu Letná",        category:"Brand",      days:["Monday","Thursday"],             time:"18:00 (start 18:15)",     timeFilter:["Evening"],             distFilter:["Up to 5 km", "5–10 km"],     distText:"5, 7, 10 km groups",    pace:"3 groups",      meet:"NPC Letná, Letenské sady 32",               lat:50.0965, lng:14.4250, free:true,  desc:"Three pace groups for all levels. Structured sessions led by Nike pacers. One of the most established brand-run clubs in Prague.", link:"https://www.nike.com/cz/running/run-clubs" },
   { id:14, name:"Nike Run Club — Bi-weekly Wednesday",    category:"Brand",      days:["Wednesday"],                     time:"18:00",                   timeFilter:["Evening"],             distFilter:["5–10 km"],                   distText:"5–8 km",                pace:"varied",        meet:"Nike Prague / Nike Chodov (alternates)",     lat:50.0858, lng:14.4253, free:true,  desc:"Alternating bi-weekly sessions from two store locations. Check Nike's channels for which store is running each week.", link:"https://www.nike.com/cz/running/run-clubs" },
   { id:15, name:"Adidas Runners Prague",                  category:"Brand",      days:["Tuesday","Thursday"],            time:"18:00",                   timeFilter:["Evening"],             distFilter:["5–10 km"],                   distText:"7–10 km",               pace:"varied",        meet:"Adidas Runbase Karlín, Pobřežní 78",         lat:50.0933, lng:14.4536, free:true,  desc:"Twice-weekly runs from the Runbase. Registered members also get free strength training and yoga classes.", link:"https://www.instagram.com/adidasrunnersprague/" },
   { id:16, name:"Top4Running Club",                       category:"Brand",      days:["Tuesday","Thursday"],            time:"18:00",                   timeFilter:["Evening"],             distFilter:["Up to 5 km", "5–10 km", "Track / Intervals"], distText:"Drills + 5 km", pace:"varied", meet:"Top4Running flagship, Náplavní 1", lat:50.0765, lng:14.4146, free:true,  desc:"Coach-led workouts twice a week for beginners and experienced runners alike. No registration needed — just show up.", link:"https://top4running.cz/" },
   { id:17, name:"Trailpoint Run Club",                    category:"Brand",      days:["varies"],                        time:"18:00",                   timeFilter:["Evening"],             distFilter:["10+ km"],                    distText:"10–15 km (Trail)",      pace:"trail",         meet:"Trailpoint store, Jirečkova 7, Letná",       lat:50.0996, lng:14.4241, free:true,  desc:"Trail-focused sessions departing from Letná. Includes terrain runs, headlamp testing, and specialised workshops.", link:"https://www.trailpoint.cz" },
-
-  // GYM
   { id:18, name:"Next.Move Run Club",                     category:"Gym",        days:["Sunday"],                        time:"17:00",                   timeFilter:["Evening"],             distFilter:["Up to 5 km", "5–10 km"],     distText:"5, 8, or 10 km",        pace:"3 groups",      meet:"Next.Move Fitness, Fragment Karlín",        lat:50.096735, lng:14.460640, free:true,  desc:"Free and open to members and non-members. Three pace groups: beginner, intermediate, advanced. One of the most accessible gym-based run clubs.", link:"https://www.nextmove.cz" },
   { id:19, name:"Esse Athletes",                          category:"Gym",        days:["Thursday","Sunday"],             time:"Thu: evening / Sun: morning", timeFilter:["Morning", "Evening"], distFilter:["10+ km", "Track / Intervals"], distText:"Intervals / Long Runs", pace:"~6:00 (long)", meet:"Prague Congress Center, Metro Vyšehrad",  lat:50.0624, lng:14.4294, free:false, desc:"Performance and marathon-focused training. Thursday: structured tempo/intervals and fartleks. Sunday: easy-paced long runs.", link:"https://www.esseathletes.com/" },
-
-  // PRO CENTER
   { id:20, name:"Running Mall (RunCzech Training Center)", category:"Pro Center", days:["Monday","Wednesday","Friday"],   time:"various",                 timeFilter:["Morning", "Afternoon", "Evening"], distFilter:["Track / Intervals"], distText:"Structured",  pace:"structured",    meet:"Františka Křížka 11, Praha 7",               lat:50.0998, lng:14.4332, free:false, desc:"Fee-based structured programs: Wake Up Run, Sunrise Run (bi-weekly Fridays, intervals + hills), VO2max Boost, and Running Technique.", link:"https://www.runczech.com/en/training-center" },
   { id:21, name:"Mattoni FreeRun",                        category:"Pro Center", days:["Monday"],                        time:"18:00",                   timeFilter:["Evening"],             distFilter:["5–10 km"],                   distText:"Structured (~7 km)",    pace:"varied",        meet:"Stromovka Park (near Planetarium)",         lat:50.1054, lng:14.4267, free:true,  desc:"Free coach-led training sessions in Stromovka every Monday. Structured workout with professional guidance at no cost.", link:"https://freerun.mattoni.cz" },
-
-  // NEAR PRAGUE
-  { id:22, name:"Rozběháme Kladno",                       category:"Near Prague", days:["Wednesday","Thursday","Saturday","Sunday"], time:"Wed/Thu/Sat 17:30 · Sun 09:00", timeFilter:["Morning", "Evening"], distFilter:["Varies / Social"], distText:"Varies", pace:"varied", meet:"Sletiště Kladno",                  lat:50.1384, lng:14.0926, free:true,  desc:"Highly active club in Kladno with 4 sessions per week. Known for canicross (running with dogs) workshops. Great community just outside the city.", link:"https://www.instagram.com/rozbehame.kladno/" },
-  { id:23, name:"OK Roztoky (Orienteering Club)",         category:"Near Prague", days:["Wednesday"],                     time:"17:00 summer / 16:30 winter", timeFilter:["Afternoon", "Evening"], distFilter:["Varies / Social"], distText:"Orienteering", pace:"varied", meet:"Roztoky u Prahy",                           lat:50.1594, lng:14.3980, free:false, desc:"Orienteering-focused club with training for both youth and adults. Wednesday sessions in the forests around Roztoky.", link:"https://www.okroztoky.cz" }
+  { id:22, name:"Rozběháme Kladno",                       category:"Near Prague", days:["Wednesday","Thursday","Saturday","Sunday"], time:"Wed/Thu/Sat 17:30 · Sun 09:00", timeFilter:["Morning", "Evening"], distFilter:["Varies / Social"], distText:"Varies", pace:"varied", meet:"Sletiště Kladno", lat:50.1384, lng:14.0926, free:true,  desc:"Highly active club in Kladno with 4 sessions per week. Known for canicross (running with dogs) workshops. Great community just outside the city.", link:"https://www.instagram.com/rozbehame.kladno/" },
+  { id:23, name:"OK Roztoky (Orienteering Club)",         category:"Near Prague", days:["Wednesday"],                     time:"17:00 summer / 16:30 winter", timeFilter:["Afternoon", "Evening"], distFilter:["Varies / Social"], distText:"Orienteering", pace:"varied", meet:"Roztoky u Prahy", lat:50.1594, lng:14.3980, free:false, desc:"Orienteering-focused club with training for both youth and adults. Wednesday sessions in the forests around Roztoky.", link:"https://www.okroztoky.cz" }
 ];
 
 /* ── STATE & CONSTANTS ─────────────────────────────────────────────── */
@@ -493,9 +623,9 @@ const DISTANCES = ["Up to 5 km", "5–10 km", "10+ km", "Track / Intervals", "Va
 const DAYS  = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 const PACES = ["< 5:00","5:00–6:00","6:00–7:00","7:00+","Social / varied"];
 
-const jsDay = new Date().getDay(); // 0=Sun ... 6=Sat
+const jsDay = new Date().getDay();
 const TODAY = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][jsDay];
-const state = { search:"", cat:null, day:null, timeOfDay:null, distance:null, pace:null, selected:null, tonight:false, nearMe:false, userLat:null, userLng:null };
+const state = { search:"", cat:null, day:null, timeOfDay:null, distance:null, pace:null, selected:null, tonight:false, nearMe:false, userLat:null, userLng:null, filtersOpen:false };
 
 /* ── HELPERS ───────────────────────────────────────────────────────── */
 function scrollToApp() { document.getElementById('app').scrollIntoView({ behavior:'smooth' }); }
@@ -528,6 +658,30 @@ function paceMatch(clubPace, filter) {
   return false;
 }
 
+/* ── FILTER TOGGLE ────────────────────────────────────────────────── */
+function toggleFilters() {
+  state.filtersOpen = !state.filtersOpen;
+  const body = document.getElementById('filtersBody');
+  const chevron = document.getElementById('filtersChevron');
+  body.classList.toggle('open', state.filtersOpen);
+  chevron.classList.toggle('open', state.filtersOpen);
+}
+
+function getActiveFilterCount() {
+  return [state.cat, state.day, state.timeOfDay, state.distance, state.pace].filter(Boolean).length;
+}
+
+function updateFilterBadge() {
+  const n = getActiveFilterCount();
+  const badge = document.getElementById('filterCount');
+  badge.textContent = n;
+  badge.classList.toggle('visible', n > 0);
+  // Auto-open filters if a filter becomes active
+  if (n > 0 && !state.filtersOpen) {
+    // keep closed unless user opens manually
+  }
+}
+
 /* ── TONIGHT INIT ─────────────────────────────────────────────────── */
 function initTonight() {
   const count = CLUBS.filter(c => c.days.includes(TODAY)).length;
@@ -535,9 +689,7 @@ function initTonight() {
   document.getElementById('tonightSub').textContent = count + ' club' + (count !== 1 ? 's' : '') + ' out today';
 }
 
-function activateTonight() {
-  if (!state.tonight) toggleTonight();
-}
+function activateTonight() { if (!state.tonight) toggleTonight(); }
 
 function toggleTonight() {
   state.tonight = !state.tonight;
@@ -546,12 +698,14 @@ function toggleTonight() {
     document.querySelectorAll('#dayFilter .pill').forEach(p => p.classList.toggle('active', p.textContent === TODAY));
     document.getElementById('tonightBtn').textContent = 'Clear';
     document.getElementById('tonightBtn').classList.add('active');
+    if (!state.filtersOpen) toggleFilters();
   } else {
     state.day = null;
     document.querySelectorAll('#dayFilter .pill').forEach(p => p.classList.remove('active'));
     document.getElementById('tonightBtn').textContent = 'Show';
     document.getElementById('tonightBtn').classList.remove('active');
   }
+  updateFilterBadge();
   render();
 }
 
@@ -559,17 +713,11 @@ function toggleTonight() {
 function initGreeting() {
   const hour = new Date().getHours();
   let greeting = "Good night runners";
-  
-  if (hour >= 4 && hour < 12) {
-    greeting = "Good morning runners";
-  } else if (hour >= 12 && hour < 18) {
-    greeting = "Good afternoon runners";
-  } else if (hour >= 18 && hour < 22) {
-    greeting = "Good evening runners";
-  }
-  
-  const greetingEl = document.getElementById('greetingText');
-  if (greetingEl) greetingEl.textContent = greeting;
+  if (hour >= 4 && hour < 12) greeting = "Good morning runners";
+  else if (hour >= 12 && hour < 18) greeting = "Good afternoon runners";
+  else if (hour >= 18 && hour < 22) greeting = "Good evening runners";
+  const el = document.getElementById('greetingText');
+  if (el) el.textContent = greeting;
 }
 
 /* ── GEOLOCATION ──────────────────────────────────────────────────── */
@@ -582,8 +730,7 @@ function toggleNearMe() {
     render();
   } else {
     navigator.geolocation.getCurrentPosition(pos => {
-      state.userLat = pos.coords.latitude;
-      state.userLng = pos.coords.longitude;
+      state.userLat = pos.coords.latitude; state.userLng = pos.coords.longitude;
       state.nearMe = true;
       document.getElementById('nearSideBtn').classList.add('active');
       document.getElementById('nearSideBtn').innerHTML = '✓ Sorted by distance';
@@ -596,11 +743,7 @@ function toggleNearMe() {
 /* ── MAP ──────────────────────────────────────────────────────────── */
 const map = L.map('map').setView([50.082, 14.43], 12);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap' }).addTo(map);
-
-// Close detail view if user clicks the background map
-map.on('click', () => {
-  if (state.selected) closeDetail();
-});
+map.on('click', () => { if (state.selected) closeModal(); });
 
 function makeIcon(club, selected) {
   const color = CAT_COLORS[club.category] || '#fff';
@@ -616,11 +759,7 @@ const markers = {};
 CLUBS.forEach(c => {
   const m = L.marker([c.lat, c.lng], { icon: makeIcon(c, false) }).addTo(map)
     .bindPopup(`<div class="popup-name">${c.name}</div><div class="popup-row">📅 <span>${c.days.join(', ')} · ${c.time}</span></div><div class="popup-row">⏱ <span>${c.pace}</span></div><div class="popup-row">📏 <span>${c.distText}</span></div><div class="popup-row">📍 <span>${c.meet}</span></div>`);
-  
-  m.on('click', (e) => {
-    L.DomEvent.stopPropagation(e);
-    selectClub(c.id);
-  });
+  m.on('click', (e) => { L.DomEvent.stopPropagation(e); openModal(c.id); });
   markers[c.id] = m;
 });
 
@@ -646,6 +785,7 @@ function buildPills(containerId, items, key) {
         document.getElementById('tonightBtn').textContent = 'Show';
         document.getElementById('tonightBtn').classList.remove('active');
       }
+      updateFilterBadge();
       render();
     };
     el.appendChild(btn);
@@ -658,7 +798,6 @@ buildPills('distFilter', DISTANCES, 'distance');
 buildPills('paceFilter', PACES, 'pace');
 buildPills('catFilter', Object.keys(CAT_COLORS), 'cat');
 
-
 document.getElementById('searchInput').addEventListener('input', e => { state.search = e.target.value.toLowerCase(); render(); });
 
 function resetFilters() {
@@ -670,6 +809,7 @@ function resetFilters() {
   document.getElementById('nearSideBtn').classList.remove('active');
   document.getElementById('nearSideBtn').innerHTML = '📍 Sort by distance from me';
   document.getElementById('nearNavBtn').classList.remove('active');
+  updateFilterBadge();
   render();
 }
 
@@ -693,7 +833,6 @@ function getFiltered() {
   return list;
 }
 
-/* ── AUTO-FIT MAP TO RESULTS ──────────────────────────────────────── */
 function fitVisibleMarkers(visibleList) {
   if (visibleList.length === 0 || state.selected) return;
   const bounds = L.latLngBounds(visibleList.map(c => [c.lat, c.lng]));
@@ -739,55 +878,70 @@ function render() {
 
     card.addEventListener('click', e => {
       if (e.target.closest('.c-link')) return;
-      selectClub(c.id);
+      openModal(c.id);
     });
     container.appendChild(card);
   });
 
   const visible = new Set(list.map(c => c.id));
   CLUBS.forEach(c => markers[c.id].setOpacity(visible.has(c.id) ? 1 : 0.08));
-
   fitVisibleMarkers(list);
 }
 
-/* ── SELECT / DETAIL ─────────────────────────────────────────────── */
-function selectClub(id) {
+/* ── MODAL ────────────────────────────────────────────────────────── */
+function openModal(id) {
   state.selected = id;
   const club = CLUBS.find(c => c.id === id);
+  const color = CAT_COLORS[club.category] || '#fff';
+
   CLUBS.forEach(c => markers[c.id].setIcon(makeIcon(c, c.id === id)));
-  
-  map.flyTo([club.lat, club.lng], 16, { duration: 0.65 });
+  map.flyTo([club.lat, club.lng], 15, { duration: 0.55 });
   markers[id].openPopup();
 
-  document.getElementById('hintPanel').style.display = 'none';
-  document.getElementById('detailPanel').classList.add('visible');
-  document.getElementById('dName').textContent  = club.name;
-  document.getElementById('dDay').textContent   = club.days.join(', ');
-  document.getElementById('dTime').textContent  = club.time;
-  document.getElementById('dPace').textContent  = club.pace;
-  document.getElementById('dDist').textContent  = club.distText;
-  document.getElementById('dCat').textContent   = club.category;
-  document.getElementById('dMeet').textContent  = club.meet;
-  document.getElementById('dFree').textContent  = club.free ? '✓ Free to join' : 'Paid / membership';
-  document.getElementById('dDesc').textContent  = club.desc;
-  
-  const link = document.getElementById('dLink');
-  if (club.link) {
-    link.href = club.link; link.style.display = 'inline-flex';
-  } else {
-    link.style.display = 'none';
-  }
+  // Populate
+  document.getElementById('mCatDot').style.background = color;
+  document.getElementById('mName').textContent = club.name;
+  document.getElementById('mCatLabel').style.color = color;
+  document.getElementById('mCatLabel').textContent = club.category;
+  document.getElementById('mDay').textContent   = club.days.join(', ');
+  document.getElementById('mTime').textContent  = club.time;
+  document.getElementById('mPace').textContent  = club.pace;
+  document.getElementById('mDist').textContent  = club.distText;
+  document.getElementById('mCat').textContent   = club.category;
+  document.getElementById('mMeet').textContent  = club.meet;
+  document.getElementById('mFree').textContent  = club.free ? '✓ Free to join' : 'Paid / membership';
+  document.getElementById('mDesc').textContent  = club.desc;
+
+  const badge = document.getElementById('mFreeBadge');
+  badge.textContent = club.free ? '✓ Free to join' : 'Paid / membership';
+  badge.className = 'modal-free-badge ' + (club.free ? 'free' : 'paid');
+
+  const link = document.getElementById('mLink');
+  if (club.link) { link.href = club.link; link.style.display = 'inline-flex'; }
+  else { link.style.display = 'none'; }
+
+  // Show overlay
+  document.getElementById('modalOverlay').classList.add('visible');
+  document.body.style.overflow = 'hidden';
+
   render();
 }
 
-function closeDetail() {
+function closeModal() {
   state.selected = null;
-  document.getElementById('detailPanel').classList.remove('visible');
-  document.getElementById('hintPanel').style.display = 'block';
+  document.getElementById('modalOverlay').classList.remove('visible');
+  document.body.style.overflow = '';
   CLUBS.forEach(c => markers[c.id].setIcon(makeIcon(c, false)));
   map.closePopup();
   render();
 }
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+// Keyboard: Escape closes modal
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
 /* ── INIT ─────────────────────────────────────────────────────────── */
 initGreeting();
