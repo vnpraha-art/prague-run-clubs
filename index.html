@@ -689,7 +689,7 @@ function toggleTonight() {
     document.getElementById('tonightBtn').classList.remove('active');
   }
   updateFilterBadge();
-  render();
+  render(true);
 }
 
 /* ── GREETING INIT ────────────────────────────────────────────────── */
@@ -710,7 +710,7 @@ function toggleNearMe() {
     document.getElementById('nearSideBtn').classList.remove('active');
     document.getElementById('nearSideBtn').innerHTML = '📍 Sort by distance from me';
     document.getElementById('nearNavBtn').classList.remove('active');
-    render();
+    render(true);
   } else {
     navigator.geolocation.getCurrentPosition(pos => {
       state.userLat = pos.coords.latitude; state.userLng = pos.coords.longitude;
@@ -718,7 +718,7 @@ function toggleNearMe() {
       document.getElementById('nearSideBtn').classList.add('active');
       document.getElementById('nearSideBtn').innerHTML = '✓ Sorted by distance';
       document.getElementById('nearNavBtn').classList.add('active');
-      render();
+      render(true);
     }, () => alert('Allow location access to use this feature.'));
   }
 }
@@ -767,7 +767,7 @@ function buildPills(containerId, items, key) {
         document.getElementById('tonightBtn').classList.remove('active');
       }
       updateFilterBadge();
-      render();
+      render(true);
     };
     el.appendChild(btn);
   });
@@ -779,7 +779,7 @@ buildPills('distFilter', DISTANCES, 'distance');
 buildPills('paceFilter', PACES, 'pace');
 buildPills('catFilter', Object.keys(CAT_COLORS), 'cat');
 
-document.getElementById('searchInput').addEventListener('input', e => { state.search = e.target.value.toLowerCase(); render(); });
+document.getElementById('searchInput').addEventListener('input', e => { state.search = e.target.value.toLowerCase(); render(true); });
 
 function resetFilters() {
   Object.assign(state, { search:'', cat:null, day:null, timeOfDay:null, distance:null, pace:null, tonight:false, nearMe:false });
@@ -791,7 +791,7 @@ function resetFilters() {
   document.getElementById('nearSideBtn').innerHTML = '📍 Sort by distance from me';
   document.getElementById('nearNavBtn').classList.remove('active');
   updateFilterBadge();
-  render();
+  render(true);
 }
 
 /* ── FILTER & SORT ────────────────────────────────────────────────── */
@@ -821,7 +821,7 @@ function fitVisibleMarkers(visibleList) {
 }
 
 /* ── RENDER ───────────────────────────────────────────────────────── */
-function render() {
+function render(fit = false) {
   const list = getFiltered();
   const container = document.getElementById('clubsList');
   document.getElementById('resultCount').textContent = list.length;
@@ -866,7 +866,7 @@ function render() {
 
   const visible = new Set(list.map(c => c.id));
   CLUBS.forEach(c => markers[c.id].setOpacity(visible.has(c.id) ? 1 : 0.08));
-  fitVisibleMarkers(list);
+  if (fit) fitVisibleMarkers(list);
 }
 
 /* ── MODAL ────────────────────────────────────────────────────────── */
