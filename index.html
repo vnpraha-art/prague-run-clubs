@@ -134,12 +134,11 @@
     .app { display: grid; grid-template-columns: 370px 1fr; }
 
     .sidebar {
-  position: sticky; top: 58px; height: calc(100vh - 58px);
-  overflow-y: auto; overflow-x: hidden;
-  background: var(--s1); border-right: 1px solid var(--border);
-  padding: 16px 16px;
-  /* Removed the flexbox properties here */
-}
+      position: sticky; top: 58px; height: calc(100vh - 58px);
+      overflow-y: auto; overflow-x: hidden;
+      background: var(--s1); border-right: 1px solid var(--border);
+      padding: 16px 16px;
+      display: block; /* Explicitly killing flexbox here to allow filters to expand */
     }
     .sidebar::-webkit-scrollbar { width: 3px; }
     .sidebar::-webkit-scrollbar-track { background: transparent; }
@@ -199,12 +198,10 @@
     .ftb-chevron.open { transform: rotate(180deg); }
 
     .filters-body {
-  overflow: hidden;
-  max-height: 0;
-  transition: max-height 0.32s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
-  opacity: 0;
-  flex-shrink: 0; /* Prevents the desktop sidebar from crushing the open container */
-}
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.32s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+      opacity: 0;
     }
     .filters-body.open {
       max-height: 1000px;
@@ -255,7 +252,7 @@
     .results-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: var(--muted2); font-weight: 600; }
     .results-n { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--accent); }
 
-    .clubs-list { display: flex; flex-direction: column; gap: 7px; flex: 1; }
+    .clubs-list { display: flex; flex-direction: column; gap: 7px; /* flex: 1 removed */ }
 
     /* ─── CLUB CARD ──────────────────────────────────────────────── */
     .club-card {
@@ -466,12 +463,10 @@
       <button class="btn-tonight-filter" id="tonightBtn" onclick="toggleTonight()">Show</button>
     </div>
 
-    <!-- Search always visible -->
     <div class="search-wrap">
       <input class="search-box" type="text" id="searchInput" placeholder="Search club name or location…" />
     </div>
 
-    <!-- Collapsible filter section -->
     <div class="filters-toggle-bar" id="filtersToggle" onclick="toggleFilters()">
       <div class="ftb-left">
         <span class="ftb-label">Filters</span>
@@ -510,9 +505,7 @@
       <button class="btn-near-sidebar" id="nearSideBtn" onclick="toggleNearMe()">📍 Sort by distance from me</button>
       <button class="btn-reset" onclick="resetFilters()">↺ Reset all filters</button>
 
-    </div><!-- /filters-body -->
-
-    <div class="results-row" style="margin-top: 14px;">
+    </div><div class="results-row" style="margin-top: 14px;">
       <span class="results-lbl">Results</span>
       <span class="results-n" id="resultCount">0</span>
     </div>
@@ -526,7 +519,6 @@
   </div>
 </div>
 
-<!-- ─── MODAL ──────────────────────────────────────────────────────── -->
 <div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
   <div class="modal" id="modal">
     <div class="modal-header">
@@ -801,11 +793,11 @@ function resetFilters() {
 function getFiltered() {
   let list = CLUBS.filter(c => {
     if (state.search && !c.name.toLowerCase().includes(state.search) && !c.meet.toLowerCase().includes(state.search)) return false;
-    if (state.cat   && c.category !== state.cat)              return false;
-    if (state.day   && !c.days.includes(state.day))           return false;
+    if (state.cat   && c.category !== state.cat)               return false;
+    if (state.day   && !c.days.includes(state.day))            return false;
     if (state.timeOfDay && !c.timeFilter.includes(state.timeOfDay)) return false;
     if (state.distance && !c.distFilter.includes(state.distance)) return false;
-    if (state.pace  && !paceMatch(c.pace, state.pace))        return false;
+    if (state.pace  && !paceMatch(c.pace, state.pace))         return false;
     return true;
   });
   if (state.nearMe && state.userLat != null) {
