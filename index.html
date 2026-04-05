@@ -138,13 +138,13 @@
       overflow-y: auto; overflow-x: hidden;
       background: var(--s1); border-right: 1px solid var(--border);
       padding: 16px 16px;
-      display: block; /* Explicitly killing flexbox here to allow filters to expand */
+      display: block;
     }
     .sidebar::-webkit-scrollbar { width: 3px; }
     .sidebar::-webkit-scrollbar-track { background: transparent; }
     .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-    /* ─── TONIGHT CARD ───────────────────────────────────────────── */
+    /* ─── TODAY CARD ─────────────────────────────────────────────── */
     .tonight-card {
       background: rgba(232,255,71,0.05); border: 1px solid rgba(232,255,71,0.18);
       border-radius: var(--r); padding: 14px 16px;
@@ -252,7 +252,7 @@
     .results-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: var(--muted2); font-weight: 600; }
     .results-n { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--accent); }
 
-    .clubs-list { display: flex; flex-direction: column; gap: 7px; /* flex: 1 removed */ }
+    .clubs-list { display: flex; flex-direction: column; gap: 7px; }
 
     /* ─── CLUB CARD ──────────────────────────────────────────────── */
     .club-card {
@@ -413,8 +413,8 @@
 <nav class="nav">
   <div class="nav-logo">PRAGUE <em>RUN CLUBS</em></div>
   <div class="nav-right">
-    <button class="btn-tonight-nav" onclick="scrollToApp(); activateTonight()">
-      <span class="live"></span> Running Tonight
+    <button class="btn-tonight-nav" onclick="scrollToApp(); activateToday()">
+      <span class="live"></span> Running Today
     </button>
     <button class="btn-near-nav" id="nearNavBtn" onclick="toggleNearMe()">📍 Near Me</button>
   </div>
@@ -434,8 +434,8 @@
     </h1>
     <p class="hero-tagline">From Stromovka to Vyšehrad. From 5K socials to marathon prep. Every pace, every day of the week.</p>
     <div class="hero-ctas">
-      <button class="btn-hero-primary" onclick="scrollToApp(); activateTonight()">
-        <span class="live"></span> Running Tonight
+      <button class="btn-hero-primary" onclick="scrollToApp(); activateToday()">
+        <span class="live"></span> Running Today
       </button>
       <button class="btn-hero-secondary" onclick="scrollToApp()">Explore all clubs →</button>
     </div>
@@ -456,11 +456,11 @@
       <div class="tonight-left">
         <div class="tonight-pulse"></div>
         <div>
-          <div class="tonight-text-label" id="tonightLabel">Running Tonight</div>
+          <div class="tonight-text-label" id="tonightLabel">Running Today</div>
           <div class="tonight-text-sub" id="tonightSub">—</div>
         </div>
       </div>
-      <button class="btn-tonight-filter" id="tonightBtn" onclick="toggleTonight()">Show</button>
+      <button class="btn-tonight-filter" id="tonightBtn" onclick="toggleToday()">Show</button>
     </div>
 
     <div class="search-wrap">
@@ -578,10 +578,9 @@
 <script>
 
 /* ── CONFIGURATION ─────────────────────────────────────────────────────── */
-// STEP 1: Paste your Apps Script Web App URL below after deploying Code.gs
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzOCpxw77484zKkgfuDMzztZnfY_tfcj-YYXi8--xDytQ6C8zz96iHCmXJ4QEfIzrh5BQ/exec";
 
-/* ── CATEGORY COLOURS (static — not stored in the sheet) ────────────────── */
+/* ── CATEGORY COLOURS ───────────────────────────────────────────────────── */
 const CAT_COLORS = {
   "Community":   "#e8ff47",
   "Brand":       "#ff6b35",
@@ -590,10 +589,7 @@ const CAT_COLORS = {
   "Near Prague": "#34d399"
 };
 
-// Runtime data — populated by loadClubs() on page load
 let CLUBS = [];
-
-
 
 /* ── STATE & CONSTANTS ─────────────────────────────────────────────── */
 const TIMEOFDAY = ["Morning", "Afternoon", "Evening"];
@@ -603,7 +599,7 @@ const PACES = ["< 5:00","5:00–6:00","6:00–7:00","7:00+","Social / varied"];
 
 const jsDay = new Date().getDay();
 const TODAY = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][jsDay];
-const state = { search:"", cat:null, day:null, timeOfDay:null, distance:null, pace:null, selected:null, tonight:false, nearMe:false, userLat:null, userLng:null, filtersOpen:false };
+const state = { search:"", cat:null, day:null, timeOfDay:null, distance:null, pace:null, selected:null, today:false, nearMe:false, userLat:null, userLng:null, filtersOpen:false };
 
 /* ── HELPERS ───────────────────────────────────────────────────────── */
 function scrollToApp() { document.getElementById('app').scrollIntoView({ behavior:'smooth' }); }
@@ -654,24 +650,20 @@ function updateFilterBadge() {
   const badge = document.getElementById('filterCount');
   badge.textContent = n;
   badge.classList.toggle('visible', n > 0);
-  // Auto-open filters if a filter becomes active
-  if (n > 0 && !state.filtersOpen) {
-    // keep closed unless user opens manually
-  }
 }
 
-/* ── TONIGHT INIT ─────────────────────────────────────────────────── */
-function initTonight() {
+/* ── TODAY INIT ───────────────────────────────────────────────────── */
+function initToday() {
   const count = CLUBS.filter(c => c.days.includes(TODAY)).length;
   document.getElementById('tonightLabel').textContent = 'Running ' + TODAY;
   document.getElementById('tonightSub').textContent = count + ' club' + (count !== 1 ? 's' : '') + ' out today';
 }
 
-function activateTonight() { if (!state.tonight) toggleTonight(); }
+function activateToday() { if (!state.today) toggleToday(); }
 
-function toggleTonight() {
-  state.tonight = !state.tonight;
-  if (state.tonight) {
+function toggleToday() {
+  state.today = !state.today;
+  if (state.today) {
     state.day = TODAY;
     document.querySelectorAll('#dayFilter .pill').forEach(p => p.classList.toggle('active', p.textContent === TODAY));
     document.getElementById('tonightBtn').textContent = 'Clear';
@@ -737,7 +729,7 @@ function makeIcon(club, selected) {
   });
 }
 
-const markers = {}; // populated by loadClubs() after fetch
+const markers = {};
 
 /* ── LEGEND ───────────────────────────────────────────────────────── */
 const legendEl = document.getElementById('legend');
@@ -757,7 +749,7 @@ function buildPills(containerId, items, key) {
       state[key] = on ? null : item;
       if (!on) btn.classList.add('active');
       if (key === 'day') {
-        state.tonight = false;
+        state.today = false;
         document.getElementById('tonightBtn').textContent = 'Show';
         document.getElementById('tonightBtn').classList.remove('active');
       }
@@ -777,7 +769,7 @@ buildPills('catFilter', Object.keys(CAT_COLORS), 'cat');
 document.getElementById('searchInput').addEventListener('input', e => { state.search = e.target.value.toLowerCase(); render(true); });
 
 function resetFilters() {
-  Object.assign(state, { search:'', cat:null, day:null, timeOfDay:null, distance:null, pace:null, tonight:false, nearMe:false });
+  Object.assign(state, { search:'', cat:null, day:null, timeOfDay:null, distance:null, pace:null, today:false, nearMe:false });
   document.getElementById('searchInput').value = '';
   document.querySelectorAll('.pill.active').forEach(p => p.classList.remove('active'));
   document.getElementById('tonightBtn').textContent = 'Show';
@@ -874,7 +866,6 @@ function openModal(id) {
   map.flyTo([club.lat, club.lng], 15, { duration: 0.55 });
   markers[id].openPopup();
 
-  // Populate
   document.getElementById('mCatDot').style.background = color;
   document.getElementById('mName').textContent = club.name;
   document.getElementById('mCatLabel').style.color = color;
@@ -896,7 +887,6 @@ function openModal(id) {
   if (club.link) { link.href = club.link; link.style.display = 'inline-flex'; }
   else { link.style.display = 'none'; }
 
-  // Show overlay
   document.getElementById('modalOverlay').classList.add('visible');
   document.body.style.overflow = 'hidden';
 
@@ -916,7 +906,6 @@ function handleOverlayClick(e) {
   if (e.target === document.getElementById('modalOverlay')) closeModal();
 }
 
-// Keyboard: Escape closes modal
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
 /* ── INIT ─────────────────────────────────────────────────────────── */
@@ -938,7 +927,6 @@ async function loadClubs() {
     return;
   }
 
-  // Build map markers now that CLUBS is populated
   CLUBS.forEach(c => {
     const m = L.marker([c.lat, c.lng], { icon: makeIcon(c, false) }).addTo(map)
       .bindPopup(
@@ -952,14 +940,13 @@ async function loadClubs() {
     markers[c.id] = m;
   });
 
-  // Update stats bar counts dynamically
   const freeCount = CLUBS.filter(c => c.free).length;
   const catCount  = new Set(CLUBS.map(c => c.category)).size;
   document.querySelectorAll('.hstat .n')[0].textContent = CLUBS.length;
   document.querySelectorAll('.hstat .n')[1].textContent = freeCount;
   document.querySelectorAll('.hstat .n')[2].textContent = catCount;
 
-  initTonight();
+  initToday();
   render();
 }
 
