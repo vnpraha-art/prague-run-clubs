@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Prague Run Clubs — Find your crew</title>
-  <meta name="description" content="Find running clubs in Prague and nearby. Interactive map, 23 clubs, filters by day, pace, time, and distance.">
+  <meta name="description" content="Find running clubs in Prague and nearby. Interactive map with filters by day, pace, time, and distance.">
   <meta property="og:title" content="Prague Run Clubs">
-  <meta property="og:description" content="Find your running crew in Prague. 23 clubs, 21 free to join.">
+  <meta property="og:description" content="Find your running crew in Prague — an interactive map of local run clubs, most free to join.">
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
@@ -629,11 +629,18 @@ function haversine(lat1, lng1, lat2, lng2) {
 
 function paceMatch(clubPace, filter) {
   if (!filter) return true;
-  const p = clubPace.toLowerCase();
-  const isText = isNaN(parseFloat(p));
-  if (filter === "Social / varied") return isText;
-  if (isText) return false;
-  const n = parseFloat(p);
+  const p = String(clubPace).toLowerCase().trim();
+  // Derive a numeric min/km value. Accept "6:10", "6:10–6:30", "~6:00 (long)"
+  // (colon form) or an explicit decimal like "6.2". Bare words/integers
+  // ("social", "3 groups", "structured", "trail") are treated as non-numeric
+  // and fall into the "Social / varied" bucket.
+  const mColon = p.match(/(\d{1,2}):(\d{2})/);
+  const mDec   = p.match(/\b(\d{1,2}\.\d+)\b/);
+  let n = null;
+  if (mColon) n = parseInt(mColon[1], 10) + parseInt(mColon[2], 10) / 60;
+  else if (mDec) n = parseFloat(mDec[1]);
+  if (filter === "Social / varied") return n === null;
+  if (n === null) return false;
   if (filter === "< 5:00")    return n < 5;
   if (filter === "5:00–6:00") return n >= 5 && n < 6;
   if (filter === "6:00–7:00") return n >= 6 && n < 7;
@@ -742,9 +749,13 @@ const markers = {};
 
 /* ── LEGEND ───────────────────────────────────────────────────────── */
 const legendEl = document.getElementById('legend');
-Object.entries(CAT_COLORS).forEach(([cat, color]) => {
-  legendEl.innerHTML += `<div class="leg-item"><div class="leg-dot" style="background:${color}"></div>${cat}</div>`;
-});
+function buildLegend(cats) {
+  legendEl.innerHTML = '';
+  cats.forEach(cat => {
+    const color = CAT_COLORS[cat] || '#fff';
+    legendEl.innerHTML += `<div class="leg-item"><div class="leg-dot" style="background:${color}"></div>${cat}</div>`;
+  });
+}
 
 /* ── PILLS ────────────────────────────────────────────────────────── */
 function buildPills(containerId, items, key) {
@@ -773,7 +784,7 @@ buildPills('timeFilter', TIMEOFDAY, 'timeOfDay');
 buildPills('dayFilter', DAYS, 'day');
 buildPills('distFilter', DISTANCES, 'distance');
 buildPills('paceFilter', PACES, 'pace');
-buildPills('catFilter', Object.keys(CAT_COLORS), 'cat');
+// catFilter pills + legend are built in loadClubs() from categories present in the data
 
 document.getElementById('searchInput').addEventListener('input', e => { state.search = e.target.value.toLowerCase(); render(true); });
 
@@ -920,20 +931,494 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal()
 /* ── INIT ─────────────────────────────────────────────────────────── */
 initGreeting();
 
+/* ── OFFLINE FALLBACK ──
+   Auto-generated snapshot of the Google Sheet (source of truth) as of 2026-06-14.
+   Used ONLY if the live fetch from SCRIPT_URL fails, so the map is never blank.
+   The sheet remains authoritative; refresh this snapshot if clubs change a lot. */
+const FALLBACK_CLUBS = [
+  {
+    "id": 1,
+    "name": "Prague Running Crew — Track Tuesday",
+    "category": "Community",
+    "days": [
+      "Tuesday"
+    ],
+    "time": "19:00–21:00",
+    "timeFilter": [
+      "Evening"
+    ],
+    "distFilter": [
+      "Track / Intervals"
+    ],
+    "distText": "Track",
+    "pace": "varied",
+    "meet": "Unyp Arena, Prague 9",
+    "lat": 50.10802919,
+    "lng": 14.48688614,
+    "free": true,
+    "desc": "Interval-focused speed sessions at the track. Open to all levels with structured goals. Part of the broader Prague Running Crew.",
+    "link": "https://praguerunningcrew.com/track"
+  },
+  {
+    "id": 2,
+    "name": "Prague Running Crew — Saturday Run",
+    "category": "Community",
+    "days": [
+      "Saturday"
+    ],
+    "time": "Gather 8:45, start 9:30",
+    "timeFilter": [
+      "Morning"
+    ],
+    "distFilter": [
+      "5–10 km",
+      "10+ km"
+    ],
+    "distText": "7, 12, or 18 km",
+    "pace": "varied",
+    "meet": "The Miners Coffee Bakery, Karlín",
+    "lat": 50.09636666,
+    "lng": 14.46068434,
+    "free": true,
+    "desc": "Social Saturday long run with route options: 7km (Groovy), 12km, and 18km. Coffee and bakery social before the start.",
+    "link": "https://praguerunningcrew.com/"
+  },
+  {
+    "id": 3,
+    "name": "Prague Social Runners — Wed Vltava",
+    "category": "Community",
+    "days": [
+      "Wednesday"
+    ],
+    "time": "18:30",
+    "timeFilter": [
+      "Evening"
+    ],
+    "distFilter": [
+      "5–10 km"
+    ],
+    "distText": "9 km",
+    "pace": "social",
+    "meet": "Kavárna Liberál, Holešovice",
+    "lat": 50.1006526,
+    "lng": 14.43637157,
+    "free": true,
+    "desc": "9km flat route along the Vltava riverbank. Relaxed atmosphere, all welcome. One of Prague's most popular midweek social runs.",
+    "link": "https://www.meetup.com/prague-social-runners/"
+  },
+  {
+    "id": 4,
+    "name": "Prague Social Runners — Sat Stromovka",
+    "category": "Community",
+    "days": [
+      "Saturday"
+    ],
+    "time": "10:00",
+    "timeFilter": [
+      "Morning"
+    ],
+    "distFilter": [
+      "5–10 km"
+    ],
+    "distText": "~8 km",
+    "pace": "social",
+    "meet": "Výstaviště Main Gate, Holešovice",
+    "lat": 50.1065,
+    "lng": 14.432,
+    "free": true,
+    "desc": "50-minute social run through Stromovka park. Casual, beginner-friendly, great for meeting the running community.",
+    "link": "https://www.meetup.com/prague-social-runners/"
+  },
+  {
+    "id": 5,
+    "name": "LOVE THEM Running Club — Tue 5K",
+    "category": "Community",
+    "days": [
+      "Tuesday"
+    ],
+    "time": "Evening",
+    "timeFilter": [
+      "Evening"
+    ],
+    "distFilter": [
+      "Up to 5 km",
+      "5–10 km"
+    ],
+    "distText": "5 km",
+    "pace": "6:10–6:30",
+    "meet": "Elias Cafe, Vinohrady",
+    "lat": 50.0784,
+    "lng": 14.4428,
+    "free": true,
+    "desc": "Social 5km run at an easy, conversational pace. Welcoming community for beginners and casual runners.",
+    "link": "https://www.instagram.com/lydjogging/"
+  },
+  {
+    "id": 6,
+    "name": "LOVE THEM Running Club — Sun 14K",
+    "category": "Community",
+    "days": [
+      "Sunday"
+    ],
+    "time": "Morning",
+    "timeFilter": [
+      "Morning"
+    ],
+    "distFilter": [
+      "10+ km"
+    ],
+    "distText": "14 km",
+    "pace": "6:10–6:30",
+    "meet": "Elias Cafe, Vinohrady",
+    "lat": 50.0786,
+    "lng": 14.443,
+    "free": true,
+    "desc": "Longer 14km Sunday run from the same starting point. Same friendly, social vibe stretched over more distance.",
+    "link": "https://www.instagram.com/lydjogging/"
+  },
+  {
+    "id": 7,
+    "name": "Founders Running Club (FRC)",
+    "category": "Community",
+    "days": [
+      "varies"
+    ],
+    "time": "weekly",
+    "timeFilter": [
+      "Morning",
+      "Evening"
+    ],
+    "distFilter": [
+      "5–10 km"
+    ],
+    "distText": "~5–8 km",
+    "pace": "easy",
+    "meet": "Lagom Bistro, Praha 8",
+    "lat": 50.09843111,
+    "lng": 14.46129254,
+    "free": true,
+    "desc": "Easy runs followed by networking over coffee. Pets, friends, and family welcome. Popular with the startup and tech crowd.",
+    "link": "https://www.instagram.com/frcprague/"
+  },
+  {
+    "id": 8,
+    "name": "Nomilesnosmiles — Tue Community Run",
+    "category": "Community",
+    "days": [
+      "Tuesday"
+    ],
+    "time": "18:20",
+    "timeFilter": [
+      "Evening"
+    ],
+    "distFilter": [
+      "5–10 km"
+    ],
+    "distText": "~8–10 km",
+    "pace": "varied",
+    "meet": "Praha (check socials for exact spot)",
+    "lat": 50.081,
+    "lng": 14.46126812,
+    "free": true,
+    "desc": "Community run with a strong local crew. Check their Instagram for the exact meeting point each week.",
+    "link": "https://www.instagram.com/nomilesnosmiles/"
+  },
+  {
+    "id": 9,
+    "name": "Nomilesnosmiles — Wed Track",
+    "category": "Community",
+    "days": [
+      "Wednesday"
+    ],
+    "time": "18:00",
+    "timeFilter": [
+      "Evening"
+    ],
+    "distFilter": [
+      "Track / Intervals"
+    ],
+    "distText": "Track",
+    "pace": "varied",
+    "meet": "Praha (check socials for exact spot)",
+    "lat": 50.0812,
+    "lng": 14.4315,
+    "free": true,
+    "desc": "Track-focused midweek session. Speed work and intervals in a group setting.",
+    "link": "https://www.instagram.com/nomilesnosmiles/"
+  },
+  {
+    "id": 10,
+    "name": "Nomilesnosmiles — Sun Long Run",
+    "category": "Community",
+    "days": [
+      "Sunday"
+    ],
+    "time": "09:00",
+    "timeFilter": [
+      "Morning"
+    ],
+    "distFilter": [
+      "10+ km"
+    ],
+    "distText": "15+ km",
+    "pace": "easy",
+    "meet": "Praha (check socials for exact spot)",
+    "lat": 50.0808,
+    "lng": 14.4305,
+    "free": true,
+    "desc": "Easy Sunday long run. Great way to close out the week with the crew.",
+    "link": "https://www.instagram.com/nomilesnosmiles/"
+  },
+  {
+    "id": 11,
+    "name": "Groovy Girls Run Club",
+    "category": "Community",
+    "days": [
+      "Wednesday"
+    ],
+    "time": "18:00",
+    "timeFilter": [
+      "Evening"
+    ],
+    "distFilter": [
+      "Up to 5 km"
+    ],
+    "distText": "4 km",
+    "pace": "7:00–7:10",
+    "meet": "Supernova Bakehouse, Karlín",
+    "lat": 50.0928,
+    "lng": 14.4452,
+    "free": true,
+    "desc": "A running community specifically for female beginners. 4km run at a comfortable, non-intimidating pace. Supportive and encouraging.",
+    "link": "https://www.instagram.com/prague.runningcrew/p/DKMw3jGskJQ/"
+  },
+  {
+    "id": 12,
+    "name": "Viva Sports — Sunday Social 5K",
+    "category": "Community",
+    "days": [
+      "Sunday"
+    ],
+    "time": "10:00",
+    "timeFilter": [
+      "Morning"
+    ],
+    "distFilter": [
+      "Up to 5 km",
+      "5–10 km"
+    ],
+    "distText": "5 km",
+    "pace": "6:15",
+    "meet": "Kolektor Café (Veletržní palác), Prague 7",
+    "lat": 50.10157,
+    "lng": 14.43388,
+    "free": true,
+    "desc": "Social 5km run through Stromovka at an easy ~6:15 pace, followed by a Breakfast Club. No sign-up needed — just show up.",
+    "link": "https://www.vivasports.cz/run-club-events"
+  },
+  {
+    "id": 16,
+    "name": "Top4Running Club",
+    "category": "Brand",
+    "days": [
+      "Tuesday",
+      "Thursday"
+    ],
+    "time": "18:00",
+    "timeFilter": [
+      "Evening"
+    ],
+    "distFilter": [
+      "Up to 5 km",
+      "5–10 km",
+      "Track / Intervals"
+    ],
+    "distText": "Drills + 5 km",
+    "pace": "varied",
+    "meet": "Top4Running flagship, Náplavní 1",
+    "lat": 50.0765,
+    "lng": 14.4146,
+    "free": true,
+    "desc": "Coach-led workouts twice a week for beginners and experienced runners alike. No registration needed — just show up.",
+    "link": "https://www.facebook.com/groups/top4runningclub/members"
+  },
+  {
+    "id": 17,
+    "name": "Trailpoint Run Club",
+    "category": "Brand",
+    "days": [
+      "varies"
+    ],
+    "time": "18:00",
+    "timeFilter": [
+      "Evening"
+    ],
+    "distFilter": [
+      "10+ km"
+    ],
+    "distText": "10–15 km (Trail)",
+    "pace": "trail",
+    "meet": "Trailpoint store, Jirečkova 7, Letná",
+    "lat": 50.0996,
+    "lng": 14.4241,
+    "free": true,
+    "desc": "Trail-focused sessions departing from Letná. Includes terrain runs, headlamp testing, and specialised workshops.",
+    "link": "https://www.trailpoint.cz/trailpoint-run-club/"
+  },
+  {
+    "id": 18,
+    "name": "Next.Move Run Club",
+    "category": "Gym",
+    "days": [
+      "Sunday"
+    ],
+    "time": "17:00",
+    "timeFilter": [
+      "Afternoon"
+    ],
+    "distFilter": [
+      "Up to 5 km",
+      "5–10 km"
+    ],
+    "distText": "5, 8, or 10 km",
+    "pace": "3 groups",
+    "meet": "Next.Move Fitness, Fragment Karlín",
+    "lat": 50.0967,
+    "lng": 14.4606,
+    "free": true,
+    "desc": "Free and open to members and non-members. Three pace groups: beginner, intermediate, advanced. One of the most accessible gym-based run clubs.",
+    "link": "https://www.instagram.com/next.move/"
+  },
+  {
+    "id": 19,
+    "name": "Esse Athletes",
+    "category": "Gym",
+    "days": [
+      "Thursday",
+      "Sunday"
+    ],
+    "time": "Thu: evening / Sun: morning",
+    "timeFilter": [
+      "Morning",
+      "Evening"
+    ],
+    "distFilter": [
+      "10+ km",
+      "Track / Intervals"
+    ],
+    "distText": "Intervals / Long Runs",
+    "pace": "~6:00 (long)",
+    "meet": "Prague Congress Center, Metro Vyšehrad",
+    "lat": 50.0624,
+    "lng": 14.4294,
+    "free": false,
+    "desc": "Performance and marathon-focused training. Thursday: structured tempo/intervals and fartleks. Sunday: easy-paced long runs.",
+    "link": "https://www.esseathletes.com/run-club"
+  },
+  {
+    "id": 20,
+    "name": "Running Mall (RunCzech Training Center)",
+    "category": "Pro Center",
+    "days": [
+      "Monday",
+      "Wednesday",
+      "Friday"
+    ],
+    "time": "various",
+    "timeFilter": [
+      "Morning",
+      "Afternoon",
+      "Evening"
+    ],
+    "distFilter": [
+      "Track / Intervals"
+    ],
+    "distText": "Structured",
+    "pace": "structured",
+    "meet": "Františka Křížka 11, Praha 7",
+    "lat": 50.0998,
+    "lng": 14.4332,
+    "free": false,
+    "desc": "Fee-based structured programs: Wake Up Run, Sunrise Run (bi-weekly Fridays, intervals + hills), VO2max Boost, and Running Technique.",
+    "link": "https://www.runczech.com/en/welcome-to-the-running-mall"
+  },
+  {
+    "id": 21,
+    "name": "Mattoni FreeRun",
+    "category": "Pro Center",
+    "days": [
+      "Monday"
+    ],
+    "time": "18:00",
+    "timeFilter": [
+      "Evening"
+    ],
+    "distFilter": [
+      "5–10 km"
+    ],
+    "distText": "Structured (~7 km)",
+    "pace": "varied",
+    "meet": "Stromovka Park (near Planetarium)",
+    "lat": 50.1054,
+    "lng": 14.4267,
+    "free": true,
+    "desc": "Free coach-led training sessions in Stromovka every Monday. Structured workout with professional guidance at no cost.",
+    "link": "https://www.runczech.com/en/welcome-to-the-running-mall/group-trainings/running-trainings/mattoni-freerun"
+  },
+  {
+    "id": 22,
+    "name": "1981 Run Club",
+    "category": "Community",
+    "days": [
+      "Sunday"
+    ],
+    "time": "9:15",
+    "timeFilter": [
+      "Morning"
+    ],
+    "distFilter": [
+      "Up to 5 km"
+    ],
+    "distText": "3–4 km",
+    "pace": "easy",
+    "meet": "1981 Secondhand, Nusle",
+    "lat": 50.06581,
+    "lng": 14.42862663,
+    "free": true,
+    "desc": "Social community run club based at 1981 Secondhand in Nusle. Every Sunday for an easy 3–4 km run followed by coffee and networking. Free, beginner-friendly, and dog-friendly.",
+    "link": "https://www.1981.cz/1981/1981-run-club/"
+  }
+];
+
 async function loadClubs() {
   document.getElementById('clubsList').innerHTML =
     '<div class="no-results" style="color:var(--muted)">⏳ Loading clubs…</div>';
   document.getElementById('resultCount').textContent = '…';
 
+  let usingFallback = false;
+  async function fetchClubs(attempt = 1) {
+    try {
+      const res = await fetch(SCRIPT_URL, { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      if (!Array.isArray(data) || !data.length) throw new Error('Empty payload');
+      return data;
+    } catch (err) {
+      console.error('Club fetch attempt ' + attempt + ' failed:', err);
+      if (attempt < 2) {
+        await new Promise(r => setTimeout(r, 800));
+        return fetchClubs(attempt + 1);
+      }
+      throw err;
+    }
+  }
+
   try {
-    const res  = await fetch(SCRIPT_URL);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    CLUBS = await res.json();
+    CLUBS = await fetchClubs();
   } catch (err) {
-    console.error('Failed to load clubs:', err);
-    document.getElementById('clubsList').innerHTML =
-      '<div class="no-results">⚠️ Could not load club data.<br><small style="color:var(--muted2)">Check SCRIPT_URL in the HTML.</small></div>';
-    return;
+    console.warn('Live data unavailable — using offline fallback snapshot.');
+    CLUBS = FALLBACK_CLUBS;
+    usingFallback = true;
   }
 
   CLUBS.forEach(c => {
@@ -949,11 +1434,25 @@ async function loadClubs() {
     markers[c.id] = m;
   });
 
+  // Build category legend + filter pills only for categories that actually exist in the data
+  const presentCats = Object.keys(CAT_COLORS).filter(cat => CLUBS.some(c => c.category === cat));
+  buildLegend(presentCats);
+  buildPills('catFilter', presentCats, 'cat');
+
   const freeCount = CLUBS.filter(c => c.free).length;
-  const catCount  = new Set(CLUBS.map(c => c.category)).size;
+  const catCount  = presentCats.length;
   document.querySelectorAll('.hstat .n')[0].textContent = CLUBS.length;
   document.querySelectorAll('.hstat .n')[1].textContent = freeCount;
   document.querySelectorAll('.hstat .n')[2].textContent = catCount;
+
+  if (usingFallback) {
+    const note = document.createElement('div');
+    note.className = 'no-results';
+    note.style.cssText = 'color:var(--accent2);font-size:12px;margin-bottom:8px';
+    note.innerHTML = '⚠️ Showing a saved snapshot — live data could not be loaded. Pull to refresh later.';
+    const list = document.getElementById('clubsList');
+    list.parentNode.insertBefore(note, list);
+  }
 
   initToday();
   render();
