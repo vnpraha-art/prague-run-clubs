@@ -7,6 +7,12 @@
   <meta name="description" content="Find running clubs in Prague and nearby. Interactive map with filters by day, pace, time, and distance.">
   <meta property="og:title" content="Prague Run Clubs">
   <meta property="og:description" content="Find your running crew in Prague — an interactive map of local run clubs, most free to join.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://praguerunclubs.vercel.app/">
+  <meta property="og:image" content="https://i.pinimg.com/1200x/7a/98/cf/7a98cf2e31d4204bf13fe46a31bafc01.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#080808">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23080808'/%3E%3Ctext x='32' y='45' font-family='Arial Black,Arial,sans-serif' font-weight='900' font-size='30' text-anchor='middle' fill='%23e8ff47'%3EPR%3C/text%3E%3C/svg%3E">
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
@@ -418,6 +424,14 @@
       text-decoration: none; border-radius: 100px; transition: all 0.2s;
     }
     .modal-visit:hover { background: #d8ef30; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(232,255,71,0.2); }
+    .modal-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .modal-dir {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 10px 18px; background: transparent; color: var(--text);
+      font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+      text-decoration: none; border-radius: 100px; border: 1px solid var(--border); transition: all 0.2s;
+    }
+    .modal-dir:hover { border-color: var(--accent); color: var(--accent); }
 
     /* ─── RESPONSIVE ─────────────────────────────────────────────── */
     @media (max-width: 960px) {
@@ -628,7 +642,10 @@
 
     <div class="modal-footer">
       <span class="modal-free-badge" id="mFreeBadge"></span>
-      <a id="mLink" class="modal-visit" href="#" target="_blank" rel="noopener">↗ Visit website</a>
+      <div class="modal-actions">
+        <a id="mDir" class="modal-dir" href="#" target="_blank" rel="noopener"><span aria-hidden="true">🧭</span> Directions</a>
+        <a id="mLink" class="modal-visit" href="#" target="_blank" rel="noopener">↗ Visit website</a>
+      </div>
     </div>
   </div>
 </div>
@@ -638,7 +655,7 @@
 
 /* ── CONFIGURATION ─────────────────────────────────────────────────────── */
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzOCpxw77484zKkgfuDMzztZnfY_tfcj-YYXi8--xDytQ6C8zz96iHCmXJ4QEfIzrh5BQ/exec";
-const FALLBACK_DATE = "14 June 2026";   // keep in sync with the FALLBACK_CLUBS snapshot below
+const FALLBACK_DATE = "28 October 2026";   // keep in sync with the FALLBACK_CLUBS snapshot below
 
 /* ── CATEGORY COLOURS ───────────────────────────────────────────────────── */
 const CAT_COLORS = {
@@ -749,6 +766,18 @@ function startMinutes(time) {
   return m ? parseInt(m[1], 10) * 60 + parseInt(m[2], 10) : null;
 }
 
+// Start time for a given day. Handles per-day times like "Wed 19:30 / Sun 08:00"
+// by picking the part that names that day; otherwise uses the first clock time.
+function sessionMinutes(c, day) {
+  const abbr = day.slice(0, 3).toLowerCase();
+  const parts = String(c.time).split('/');
+  if (parts.length > 1) {
+    const hit = parts.find(p => new RegExp('\\b' + abbr).test(p.toLowerCase()));
+    if (hit) return startMinutes(hit);
+  }
+  return startMinutes(c.time);
+}
+
 function nowMinutes() { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); }
 
 function fmtMinutes(m) { return Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0'); }
@@ -756,7 +785,7 @@ function fmtMinutes(m) { return Math.floor(m / 60) + ':' + String(m % 60).padSta
 // Where a club stands today: 'upcoming', 'past', 'unknown' (no clock time) or 'varies'
 function todayStatus(c) {
   if (daysVary(c)) return 'varies';
-  const start = startMinutes(c.time);
+  const start = sessionMinutes(c, TODAY);
   if (start == null) return 'unknown';
   return start < nowMinutes() ? 'past' : 'upcoming';
 }
@@ -803,7 +832,7 @@ function syncControls() {
 function initToday() {
   const today = CLUBS.filter(c => c.days.includes(TODAY));
   const varies = CLUBS.filter(daysVary).length;
-  const next = today.map(c => startMinutes(c.time)).filter(m => m != null && m >= nowMinutes()).sort((a, b) => a - b)[0];
+  const next = today.map(c => sessionMinutes(c, TODAY)).filter(m => m != null && m >= nowMinutes()).sort((a, b) => a - b)[0];
   let sub = today.length + ' club' + (today.length !== 1 ? 's' : '') + ' out today';
   if (next != null) sub += ' · next at ' + fmtMinutes(next);
   if (varies) sub += ' · +' + varies + ' with varying days';
@@ -861,6 +890,10 @@ if (map) {
   // Esri's canvas stops at zoom 16, so the map is capped there.
   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
     attribution: 'Tiles © <a href="https://www.esri.com/">Esri</a> — Esri, HERE, Garmin, © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 16
+  }).addTo(map);
+  // Matching label layer (street and district names) drawn on top of the base
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
     maxZoom: 16
   }).addTo(map);
   map.on('click', closeModal);
@@ -958,7 +991,7 @@ function getFiltered() {
     const rank = { upcoming: 0, unknown: 1, varies: 2, past: 3 };
     list = [...list].sort((a, b) =>
       rank[todayStatus(a)] - rank[todayStatus(b)] ||
-      (startMinutes(a.time) ?? 0) - (startMinutes(b.time) ?? 0)
+      (sessionMinutes(a, TODAY) ?? 0) - (sessionMinutes(b, TODAY) ?? 0)
     );
   }
   return list;
@@ -1072,6 +1105,15 @@ function openModal(id) {
     link.style.display = 'none';
   }
 
+  const dir = document.getElementById('mDir');
+  if (Number.isFinite(club.lat) && Number.isFinite(club.lng)) {
+    dir.href = 'https://www.google.com/maps/dir/?api=1&destination=' + club.lat + ',' + club.lng;
+    dir.setAttribute('aria-label', 'Directions to ' + club.name + ' (opens Google Maps in new tab)');
+    dir.style.display = 'inline-flex';
+  } else {
+    dir.style.display = 'none';
+  }
+
   const overlay = document.getElementById('modalOverlay');
   overlay.inert = false;
   overlay.classList.add('visible');
@@ -1122,7 +1164,7 @@ document.addEventListener('keydown', e => {
 /* ── INIT ─────────────────────────────────────────────────────────── */
 
 /* ── OFFLINE FALLBACK ──
-   Auto-generated snapshot of the Google Sheet (source of truth) as of 2026-06-14.
+   Auto-generated snapshot of the Google Sheet (source of truth) as of 2026-10-28.
    Used ONLY if the live fetch from SCRIPT_URL fails, so the map is never blank.
    The sheet remains authoritative; refresh this snapshot if clubs change a lot. */
 const FALLBACK_CLUBS = [
@@ -1145,7 +1187,7 @@ const FALLBACK_CLUBS = [
     "meet": "Unyp Arena, Prague 9",
     "lat": 50.10802919,
     "lng": 14.48688614,
-    "free": true,
+    "free": false,
     "desc": "Interval-focused speed sessions at the track. Open to all levels with structured goals. Part of the broader Prague Running Crew.",
     "link": "https://praguerunningcrew.com/track"
   },
@@ -1187,9 +1229,9 @@ const FALLBACK_CLUBS = [
     "distFilter": [
       "5–10 km"
     ],
-    "distText": "9 km",
+    "distText": "9–11 km",
     "pace": "social",
-    "meet": "Kavárna Liberál, Holešovice",
+    "meet": "Řezáčovo náměstí (Vltavská), Holešovice",
     "lat": 50.1006526,
     "lng": 14.43637157,
     "free": true,
@@ -1226,7 +1268,7 @@ const FALLBACK_CLUBS = [
     "days": [
       "Tuesday"
     ],
-    "time": "Evening",
+    "time": "20:00",
     "timeFilter": [
       "Evening"
     ],
@@ -1236,12 +1278,12 @@ const FALLBACK_CLUBS = [
     ],
     "distText": "5 km",
     "pace": "6:10–6:30",
-    "meet": "Elias Cafe, Vinohrady",
+    "meet": "Bubenské nábř. 306/13, Holešovice",
     "lat": 50.0784,
     "lng": 14.4428,
     "free": true,
     "desc": "Social 5km run at an easy, conversational pace. Welcoming community for beginners and casual runners.",
-    "link": "https://www.instagram.com/lydjogging/"
+    "link": "https://www.instagram.com/lovethemrunningclub/"
   },
   {
     "id": 6,
@@ -1264,25 +1306,24 @@ const FALLBACK_CLUBS = [
     "lng": 14.443,
     "free": true,
     "desc": "Longer 14km Sunday run from the same starting point. Same friendly, social vibe stretched over more distance.",
-    "link": "https://www.instagram.com/lydjogging/"
+    "link": "https://www.instagram.com/lovethemrunningclub/"
   },
   {
     "id": 7,
     "name": "Founders Running Club (FRC)",
     "category": "Community",
     "days": [
-      "varies"
+      "Saturday"
     ],
-    "time": "weekly",
+    "time": "09:30",
     "timeFilter": [
-      "Morning",
-      "Evening"
+      "Morning"
     ],
     "distFilter": [
-      "5–10 km"
+      "Up to 5 km"
     ],
-    "distText": "~5–8 km",
-    "pace": "easy",
+    "distText": "5 km",
+    "pace": "6:30–6:40",
     "meet": "Lagom Bistro, Praha 8",
     "lat": 50.09843111,
     "lng": 14.46129254,
@@ -1306,7 +1347,7 @@ const FALLBACK_CLUBS = [
     ],
     "distText": "~8–10 km",
     "pace": "varied",
-    "meet": "Praha (check socials for exact spot)",
+    "meet": "Letka café, Letná (check socials)",
     "lat": 50.081,
     "lng": 14.46126812,
     "free": true,
@@ -1389,25 +1430,24 @@ const FALLBACK_CLUBS = [
     "days": [
       "Sunday"
     ],
-    "time": "10:00",
+    "time": "Meet 9:45, start 10:00",
     "timeFilter": [
       "Morning"
     ],
     "distFilter": [
-      "Up to 5 km",
-      "5–10 km"
+      "Up to 5 km"
     ],
     "distText": "5 km",
-    "pace": "6:15",
-    "meet": "Kolektor Café (Veletržní palác), Prague 7",
-    "lat": 50.10157,
-    "lng": 14.43388,
+    "pace": "~6:20",
+    "meet": "Dukelských hrdinů 47, Holešovice",
+    "lat": 50.076,
+    "lng": 14.419,
     "free": true,
-    "desc": "Social 5km run through Stromovka at an easy ~6:15 pace, followed by a Breakfast Club. No sign-up needed — just show up.",
-    "link": "https://www.vivasports.cz/run-club-events"
+    "desc": "5K run followed by breakfast and conversation. Combines fitness with community and good food.",
+    "link": "https://www.vivasports.cz/event-details/sunday-social-5k-run-2026-04-05-10-00"
   },
   {
-    "id": 16,
+    "id": 13,
     "name": "Top4Running Club",
     "category": "Brand",
     "days": [
@@ -1433,11 +1473,11 @@ const FALLBACK_CLUBS = [
     "link": "https://www.facebook.com/groups/top4runningclub/members"
   },
   {
-    "id": 17,
+    "id": 14,
     "name": "Trailpoint Run Club",
     "category": "Brand",
     "days": [
-      "varies"
+      "Wednesday"
     ],
     "time": "18:00",
     "timeFilter": [
@@ -1456,7 +1496,7 @@ const FALLBACK_CLUBS = [
     "link": "https://www.trailpoint.cz/trailpoint-run-club/"
   },
   {
-    "id": 18,
+    "id": 15,
     "name": "Next.Move Run Club",
     "category": "Gym",
     "days": [
@@ -1480,14 +1520,14 @@ const FALLBACK_CLUBS = [
     "link": "https://www.instagram.com/next.move/"
   },
   {
-    "id": 19,
+    "id": 16,
     "name": "Esse Athletes",
     "category": "Gym",
     "days": [
-      "Thursday",
+      "Wednesday",
       "Sunday"
     ],
-    "time": "Thu: evening / Sun: morning",
+    "time": "Wed 19:30 / Sun 08:00",
     "timeFilter": [
       "Morning",
       "Evening"
@@ -1502,11 +1542,11 @@ const FALLBACK_CLUBS = [
     "lat": 50.0624,
     "lng": 14.4294,
     "free": false,
-    "desc": "Performance and marathon-focused training. Thursday: structured tempo/intervals and fartleks. Sunday: easy-paced long runs.",
+    "desc": "Performance and marathon-focused training. Wednesday: Speed Club (tempo/intervals). Sunday: long runs.",
     "link": "https://www.esseathletes.com/run-club"
   },
   {
-    "id": 20,
+    "id": 17,
     "name": "Running Mall (RunCzech Training Center)",
     "category": "Pro Center",
     "days": [
@@ -1533,22 +1573,22 @@ const FALLBACK_CLUBS = [
     "link": "https://www.runczech.com/en/welcome-to-the-running-mall"
   },
   {
-    "id": 21,
+    "id": 18,
     "name": "Mattoni FreeRun",
     "category": "Pro Center",
     "days": [
       "Monday"
     ],
-    "time": "18:00",
+    "time": "18:00–19:10",
     "timeFilter": [
       "Evening"
     ],
     "distFilter": [
       "5–10 km"
     ],
-    "distText": "Structured (~7 km)",
+    "distText": "5–8 km",
     "pace": "varied",
-    "meet": "Stromovka Park (near Planetarium)",
+    "meet": "Running Mall, Františka Křížka 11 (to Stromovka)",
     "lat": 50.1054,
     "lng": 14.4267,
     "free": true,
@@ -1556,13 +1596,13 @@ const FALLBACK_CLUBS = [
     "link": "https://www.runczech.com/en/welcome-to-the-running-mall/group-trainings/running-trainings/mattoni-freerun"
   },
   {
-    "id": 22,
+    "id": 19,
     "name": "1981 Run Club",
     "category": "Community",
     "days": [
       "Sunday"
     ],
-    "time": "9:15",
+    "time": "Meet 9:15, start 9:30",
     "timeFilter": [
       "Morning"
     ],
@@ -1571,12 +1611,131 @@ const FALLBACK_CLUBS = [
     ],
     "distText": "3–4 km",
     "pace": "easy",
-    "meet": "1981 Secondhand, Nusle",
+    "meet": "1981 Secondhand, Oldřichova 31, Nusle",
     "lat": 50.06581,
     "lng": 14.42862663,
     "free": true,
     "desc": "Social community run club based at 1981 Secondhand in Nusle. Every Sunday for an easy 3–4 km run followed by coffee and networking. Free, beginner-friendly, and dog-friendly.",
     "link": "https://www.1981.cz/1981/1981-run-club/"
+  },
+  {
+    "id": 20,
+    "name": "Run Club Prague",
+    "category": "Community",
+    "days": [
+      "Sunday"
+    ],
+    "time": "10:00",
+    "timeFilter": [
+      "Morning"
+    ],
+    "distFilter": [
+      "Varies / Social"
+    ],
+    "distText": "Social run",
+    "pace": "all levels",
+    "meet": "Kolektor Café, Dukelských hrdinů 47, Holešovice",
+    "lat": 50.1010799,
+    "lng": 14.4327993,
+    "free": true,
+    "desc": "Relaxed Sunday social run from Kolektor Café at the Trade Fair Palace. Open to all levels.",
+    "link": "https://www.instagram.com/runclub_prague/"
+  },
+  {
+    "id": 21,
+    "name": "Old Town Running",
+    "category": "Community",
+    "days": [
+      "Wednesday"
+    ],
+    "time": "18:00",
+    "timeFilter": [
+      "Evening"
+    ],
+    "distFilter": [
+      "Up to 5 km",
+      "5–10 km",
+      "10+ km"
+    ],
+    "distText": "4–12 km",
+    "pace": "social",
+    "meet": "Bar No. 7, Na Struze 7, Nové Město",
+    "lat": 50.0796687,
+    "lng": 14.4150453,
+    "free": true,
+    "desc": "Midweek social run from central Prague with 4–12 km route options, followed by drinks. Open to all abilities.",
+    "link": "https://www.instagram.com/oldtownrunning/"
+  },
+  {
+    "id": 22,
+    "name": "FF RUNclub — Na Knížecí",
+    "category": "Gym",
+    "days": [
+      "Monday",
+      "Saturday"
+    ],
+    "time": "Mon 17:30 / Sat 08:00",
+    "timeFilter": [
+      "Morning",
+      "Evening"
+    ],
+    "distFilter": [
+      "5–10 km"
+    ],
+    "distText": "5–6 km",
+    "pace": "coach-led",
+    "meet": "Form Factory, Ostrovského 464/6, Smíchov",
+    "lat": 50.0693068,
+    "lng": 14.4049327,
+    "free": false,
+    "desc": "Trainer-led group runs from the Form Factory gym. Included for members and MultiSport holders; book via the app.",
+    "link": "https://www.formfactory.cz/runclub/"
+  },
+  {
+    "id": 23,
+    "name": "Running with FINEP — Malý háj",
+    "category": "Community",
+    "days": [
+      "Tuesday"
+    ],
+    "time": "18:00",
+    "timeFilter": [
+      "Evening"
+    ],
+    "distFilter": [
+      "Varies / Social"
+    ],
+    "distText": "Adapted to group",
+    "pace": "varied",
+    "meet": "Trio Malý háj Café, Honzíkova 635/6, Praha 10",
+    "lat": 50.066854,
+    "lng": 14.5536548,
+    "free": true,
+    "desc": "Free weekly run, year-round. Training adapted to participants' level; suitable from age 12.",
+    "link": "https://finep.cz/en/running-with-finep"
+  },
+  {
+    "id": 24,
+    "name": "Running with FINEP — Britská čtvrť",
+    "category": "Community",
+    "days": [
+      "Wednesday"
+    ],
+    "time": "18:00",
+    "timeFilter": [
+      "Evening"
+    ],
+    "distFilter": [
+      "Varies / Social"
+    ],
+    "distText": "Adapted to group",
+    "pace": "varied",
+    "meet": "Bistro Britská, Medunova 1, Praha 13 (Britská čtvrť)",
+    "lat": 50.0458736,
+    "lng": 14.301864,
+    "free": true,
+    "desc": "Free weekly run, year-round. Training adapted to participants' level; suitable from age 12.",
+    "link": "https://finep.cz/en/running-with-finep"
   }
 ];
 
