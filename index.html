@@ -23,13 +23,15 @@
       --accent:   #e8ff47;
       --accent2:  #ff6b35;
       --text:     #f2f2f2;
-      --muted:    #888;
-      --muted2:   #555;
+      --muted:    #a0a0a0;
+      --muted2:   #8a8a8a;
       --r:        12px;
       --r-sm:     8px;
     }
 
     html { scroll-behavior: smooth; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
 
     /* ─── NAV ─────────────────────────────────────────────────────── */
@@ -184,7 +186,8 @@
     .filters-toggle-bar {
       display: flex; align-items: center; justify-content: space-between;
       padding: 10px 0; margin-bottom: 4px; cursor: pointer;
-      border-bottom: 1px solid var(--border);
+      width: 100%; background: none; border: 0; border-bottom: 1px solid var(--border);
+      color: inherit; font: inherit; text-align: left;
       user-select: none;
     }
     .filters-toggle-bar:hover .ftb-label { color: var(--accent); }
@@ -218,7 +221,7 @@
 
     .f-block { padding: 14px 0; border-bottom: 1px solid var(--border); }
     .f-block:last-of-type { border-bottom: none; padding-bottom: 0; }
-    .f-label { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: var(--muted2); font-weight: 600; margin-bottom: 10px; }
+    .f-label { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--muted2); font-weight: 600; margin-bottom: 10px; }
 
     .search-wrap { margin-bottom: 14px; }
     .search-box {
@@ -257,7 +260,7 @@
 
     /* ─── RESULTS ─────────────────────────────────────────────────── */
     .results-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
-    .results-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: var(--muted2); font-weight: 600; }
+    .results-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--muted2); font-weight: 600; }
     .results-n { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--accent); }
 
     .clubs-list { display: flex; flex-direction: column; gap: 7px; }
@@ -270,6 +273,13 @@
     }
     .club-card:hover { border-color: rgba(232,255,71,0.22); background: var(--s3); }
     .club-card.selected { border-color: rgba(232,255,71,0.45); background: rgba(232,255,71,0.04); }
+    .club-card.past { opacity: 0.6; }
+    .c-main {
+      flex: 1; min-width: 0; display: flex; gap: 11px; align-items: flex-start;
+      background: none; border: 0; padding: 0; color: inherit; font: inherit; text-align: left; cursor: pointer;
+    }
+    .c-main .c-body, .c-main .c-name { display: block; }
+    .ctag-when { background: var(--s3); color: var(--muted); }
 
     .c-avatar {
       width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
@@ -281,7 +291,7 @@
     .c-row { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); margin-bottom: 3px; flex-wrap: wrap; }
     .c-row .sep { color: var(--border); }
     .c-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
-    .ctag { font-size: 10px; padding: 2px 7px; border-radius: 3px; font-weight: 600; }
+    .ctag { font-size: 11px; padding: 2px 7px; border-radius: 3px; font-weight: 600; }
     .ctag-free { background: rgba(100,220,120,0.12); color: #64dc78; }
     .ctag-paid { background: rgba(255,100,100,0.12); color: #ff8080; }
     .ctag-dist { background: var(--s3); color: var(--text); border: 1px solid var(--border); padding: 1px 6px; }
@@ -296,6 +306,9 @@
     .c-link:hover { background: var(--accent); color: #000; border-color: var(--accent); }
 
     .no-results { text-align: center; padding: 36px 12px; color: var(--muted); font-size: 14px; }
+    .sidebar-log { margin-top: 18px; padding: 14px 0 4px; border-top: 1px solid var(--border); text-align: center; font-size: 12px; color: var(--muted); }
+    .sidebar-log a { color: var(--accent); font-weight: 600; text-decoration: none; }
+    .sidebar-log a:hover { text-decoration: underline; }
 
     /* ─── MAP COLUMN ─────────────────────────────────────────────── */
     .map-col {
@@ -309,6 +322,10 @@
     .leg-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
     .leg-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
     #map { flex: 1; min-height: 0; background: var(--s1); cursor: default; }
+    .map-error { height: 100%; display: flex; align-items: center; justify-content: center; padding: 24px; text-align: center; color: var(--muted); font-size: 14px; }
+
+    /* List / Map switch, shown only on narrow screens */
+    .view-toggle { display: none; }
 
     .leaflet-tile { filter: brightness(0.85) saturate(0.7); }
     .leaflet-control-zoom a { background: var(--s1) !important; color: var(--text) !important; border-color: var(--border) !important; }
@@ -371,8 +388,8 @@
       display: grid; grid-template-columns: repeat(3, 1fr);
       gap: 12px; padding: 0 24px;
     }
-    .modal-field label {
-      font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px;
+    .modal-field .mf-label {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px;
       color: var(--muted2); display: block; margin-bottom: 4px;
     }
     .modal-field p { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.4; }
@@ -406,13 +423,35 @@
     @media (max-width: 960px) {
       .app { grid-template-columns: 1fr; }
       .sidebar { position: static; height: auto; max-height: none; }
-      .map-col { position: static; height: 500px; }
+      .map-col { position: static; height: calc(100svh - 58px - 58px); }
+      .view-toggle {
+        display: flex; gap: 6px; position: sticky; top: 58px; z-index: 900;
+        padding: 10px 16px; background: var(--s1); border-bottom: 1px solid var(--border);
+      }
+      .view-toggle button {
+        flex: 1; padding: 8px; border-radius: 100px; border: 1px solid var(--border);
+        background: transparent; color: var(--muted); font-family: 'DM Sans', sans-serif;
+        font-size: 13px; font-weight: 600; cursor: pointer;
+      }
+      .view-toggle button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #000; }
+      .app[data-view="list"] .map-col { display: none; }
+      .app[data-view="map"] .sidebar { display: none; }
       .hero { padding: 80px 24px 90px; }
       .hero-h1 { font-size: clamp(64px, 16vw, 100px); }
       .hero-stats { display: none; }
       .nav { padding: 0 16px; }
       .modal { max-width: 100%; }
       .modal-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .btn-log-nav { display: none; }
+      .nav-logo { font-size: 17px; letter-spacing: 1.5px; line-height: 1.05; }
+      .nav-right { gap: 6px; }
+      .btn-tonight-nav, .btn-near-nav { padding: 7px 12px; white-space: nowrap; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation: none !important; transition: none !important; }
     }
   </style>
 </head>
@@ -422,10 +461,10 @@
   <div class="nav-logo">PRAGUE <em>RUN CLUBS</em></div>
   <div class="nav-right">
     <a class="btn-log-nav" href="https://docs.google.com/forms/d/e/1FAIpQLSfpEdjcw68S7oPwbujrpC8uM0B4XPpq-_ZxtWMCa6fuS98msg/viewform?usp=publish-editor" target="_blank" rel="noopener">+ Log a club</a>
-    <button class="btn-tonight-nav" onclick="scrollToApp(); activateToday()">
-      <span class="live"></span> Running Today
+    <button type="button" class="btn-tonight-nav" onclick="scrollToApp(); activateToday()">
+      <span class="live" aria-hidden="true"></span> Running Today
     </button>
-    <button class="btn-near-nav" id="nearNavBtn" onclick="toggleNearMe()">📍 Near Me</button>
+    <button type="button" class="btn-near-nav" id="nearNavBtn" aria-pressed="false" onclick="toggleNearMe()"><span aria-hidden="true">📍</span> Near Me</button>
   </div>
 </nav>
 
@@ -434,7 +473,7 @@
   <div class="hero-inner">
     <p class="hero-eyebrow">
       <span id="greetingText"></span>
-      <span style="color:rgba(255,255,255,0.25); margin: 0 10px;">|</span>
+      <span aria-hidden="true" style="color:rgba(255,255,255,0.25); margin: 0 10px;">|</span>
       PRAGUE &amp; SURROUNDINGS
     </p>
     <h1 class="hero-h1">
@@ -443,10 +482,10 @@
     </h1>
     <p class="hero-tagline">From Stromovka to Vyšehrad. From 5K socials to marathon prep. Every pace, every day of the week.</p>
     <div class="hero-ctas">
-      <button class="btn-hero-primary" onclick="scrollToApp(); activateToday()">
-        <span class="live"></span> Running Today
+      <button type="button" class="btn-hero-primary" onclick="scrollToApp(); activateToday()">
+        <span class="live" aria-hidden="true"></span> Running Today
       </button>
-      <button class="btn-hero-secondary" onclick="scrollToApp()">Explore all clubs →</button>
+      <button type="button" class="btn-hero-secondary" onclick="scrollToApp()">Explore all clubs →</button>
     </div>
   </div>
   <div class="hero-stats">
@@ -457,68 +496,79 @@
   </div>
 </section>
 
-<div class="app" id="app">
+<div class="app" id="app" data-view="list">
+
+  <div class="view-toggle" role="group" aria-label="Show clubs as">
+    <button type="button" data-view="list" aria-pressed="true" onclick="setView('list')">☰ List</button>
+    <button type="button" data-view="map" aria-pressed="false" onclick="setView('map')">🗺 Map</button>
+  </div>
 
   <aside class="sidebar">
 
     <div class="tonight-card">
       <div class="tonight-left">
-        <div class="tonight-pulse"></div>
+        <div class="tonight-pulse" aria-hidden="true"></div>
         <div>
           <div class="tonight-text-label" id="tonightLabel">Running Today</div>
           <div class="tonight-text-sub" id="tonightSub">—</div>
         </div>
       </div>
-      <button class="btn-tonight-filter" id="tonightBtn" onclick="toggleToday()">Show</button>
+      <button type="button" class="btn-tonight-filter" id="tonightBtn" aria-pressed="false" aria-describedby="tonightLabel" onclick="toggleToday()">Show</button>
     </div>
 
     <div class="search-wrap">
-      <input class="search-box" type="text" id="searchInput" placeholder="Search club name or location…" />
+      <label class="sr-only" for="searchInput">Search clubs</label>
+      <input class="search-box" type="search" id="searchInput" placeholder="Search club name or location…" />
     </div>
 
-    <div class="filters-toggle-bar" id="filtersToggle" onclick="toggleFilters()">
+    <button type="button" class="filters-toggle-bar" id="filtersToggle" aria-expanded="false" aria-controls="filtersBody" onclick="toggleFilters()">
       <div class="ftb-left">
         <span class="ftb-label">Filters</span>
         <span class="ftb-active-count" id="filterCount"></span>
       </div>
-      <span class="ftb-chevron" id="filtersChevron">▼</span>
+      <span class="ftb-chevron" id="filtersChevron" aria-hidden="true">▼</span>
+    </button>
+
+    <div class="filters-body" id="filtersBody" inert>
+
+      <div class="f-block">
+        <div class="f-label" id="lblTime">Time of Day</div>
+        <div class="pills" id="timeFilter" role="group" aria-labelledby="lblTime"></div>
+      </div>
+
+      <div class="f-block">
+        <div class="f-label" id="lblDay">Day</div>
+        <div class="pills" id="dayFilter" role="group" aria-labelledby="lblDay"></div>
+      </div>
+
+      <div class="f-block">
+        <div class="f-label" id="lblDist">Distance</div>
+        <div class="pills" id="distFilter" role="group" aria-labelledby="lblDist"></div>
+      </div>
+
+      <div class="f-block">
+        <div class="f-label" id="lblPace">Pace (min/km)</div>
+        <div class="pills" id="paceFilter" role="group" aria-labelledby="lblPace"></div>
+      </div>
+
+      <div class="f-block">
+        <div class="f-label" id="lblCat">Category</div>
+        <div class="pills" id="catFilter" role="group" aria-labelledby="lblCat"></div>
+      </div>
+
+      <button type="button" class="btn-near-sidebar" id="nearSideBtn" aria-pressed="false" onclick="toggleNearMe()">📍 Sort by distance from me</button>
+      <button type="button" class="btn-reset" onclick="resetFilters()">↺ Reset all filters</button>
+
     </div>
-
-    <div class="filters-body" id="filtersBody">
-
-      <div class="f-block">
-        <div class="f-label">Time of Day</div>
-        <div class="pills" id="timeFilter"></div>
-      </div>
-
-      <div class="f-block">
-        <div class="f-label">Day</div>
-        <div class="pills" id="dayFilter"></div>
-      </div>
-
-      <div class="f-block">
-        <div class="f-label">Distance</div>
-        <div class="pills" id="distFilter"></div>
-      </div>
-
-      <div class="f-block">
-        <div class="f-label">Pace (min/km)</div>
-        <div class="pills" id="paceFilter"></div>
-      </div>
-
-      <div class="f-block">
-        <div class="f-label">Category</div>
-        <div class="pills" id="catFilter"></div>
-      </div>
-
-      <button class="btn-near-sidebar" id="nearSideBtn" onclick="toggleNearMe()">📍 Sort by distance from me</button>
-      <button class="btn-reset" onclick="resetFilters()">↺ Reset all filters</button>
-
-    </div><div class="results-row" style="margin-top: 14px;">
+    <div class="results-row" style="margin-top: 14px;" aria-live="polite">
       <span class="results-lbl">Results</span>
       <span class="results-n" id="resultCount">0</span>
     </div>
     <div class="clubs-list" id="clubsList"></div>
+
+    <p class="sidebar-log">Know a club that’s missing?
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSfpEdjcw68S7oPwbujrpC8uM0B4XPpq-_ZxtWMCa6fuS98msg/viewform?usp=publish-editor" target="_blank" rel="noopener">+ Log a club</a>
+    </p>
 
   </aside>
 
@@ -528,48 +578,48 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
-  <div class="modal" id="modal">
+<div class="modal-overlay" id="modalOverlay" inert onclick="handleOverlayClick(event)">
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mName" aria-describedby="mDesc">
     <div class="modal-header">
       <div style="display:flex;align-items:flex-start;gap:10px;flex:1;min-width:0;">
-        <div class="modal-cat-dot" id="mCatDot"></div>
+        <div class="modal-cat-dot" id="mCatDot" aria-hidden="true"></div>
         <div class="modal-name-wrap">
           <div class="modal-name" id="mName"></div>
           <div class="modal-cat-label" id="mCatLabel"></div>
         </div>
       </div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
+      <button type="button" class="modal-close" id="modalClose" aria-label="Close" onclick="closeModal()">✕</button>
     </div>
 
     <div class="modal-divider"></div>
 
     <div class="modal-grid">
       <div class="modal-field">
-        <label>Day(s)</label>
+        <span class="mf-label">Day(s)</span>
         <p id="mDay"></p>
       </div>
       <div class="modal-field">
-        <label>Time</label>
+        <span class="mf-label">Time</span>
         <p id="mTime"></p>
       </div>
       <div class="modal-field">
-        <label>Pace</label>
+        <span class="mf-label">Pace</span>
         <p id="mPace"></p>
       </div>
       <div class="modal-field">
-        <label>Distance</label>
+        <span class="mf-label">Distance</span>
         <p id="mDist"></p>
       </div>
       <div class="modal-field">
-        <label>Entry</label>
+        <span class="mf-label">Entry</span>
         <p id="mFree"></p>
       </div>
       <div class="modal-field">
-        <label>Category</label>
+        <span class="mf-label">Category</span>
         <p id="mCat"></p>
       </div>
       <div class="modal-field span-full">
-        <label>Meeting Point</label>
+        <span class="mf-label">Meeting Point</span>
         <p id="mMeet"></p>
       </div>
     </div>
@@ -588,6 +638,7 @@
 
 /* ── CONFIGURATION ─────────────────────────────────────────────────────── */
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzOCpxw77484zKkgfuDMzztZnfY_tfcj-YYXi8--xDytQ6C8zz96iHCmXJ4QEfIzrh5BQ/exec";
+const FALLBACK_DATE = "14 June 2026";   // keep in sync with the FALLBACK_CLUBS snapshot below
 
 /* ── CATEGORY COLOURS ───────────────────────────────────────────────────── */
 const CAT_COLORS = {
@@ -609,9 +660,41 @@ const PACES = ["< 5:00","5:00–6:00","6:00–7:00","7:00+","Social / varied"];
 const jsDay = new Date().getDay();
 const TODAY = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][jsDay];
 const state = { search:"", cat:null, day:null, timeOfDay:null, distance:null, pace:null, selected:null, today:false, nearMe:false, userLat:null, userLng:null, filtersOpen:false };
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+initGreeting();
 
 /* ── HELPERS ───────────────────────────────────────────────────────── */
-function scrollToApp() { document.getElementById('app').scrollIntoView({ behavior:'smooth' }); }
+// Club data comes from a public Google Sheet, so every value is escaped before it
+// goes into HTML and links are limited to http(s).
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[ch]);
+}
+
+function safeUrl(u) {
+  try {
+    const url = new URL(String(u ?? '').trim());
+    return (url.protocol === 'https:' || url.protocol === 'http:') ? url.href : '';
+  } catch { return ''; }
+}
+
+function toArray(v) { return Array.isArray(v) ? v : String(v ?? '').split(/\s*,\s*/).filter(Boolean); }
+
+function normalizeClub(c) {
+  return {
+    ...c,
+    name: String(c.name ?? ''), meet: String(c.meet ?? ''),
+    days: toArray(c.days), timeFilter: toArray(c.timeFilter), distFilter: toArray(c.distFilter),
+    lat: Number(c.lat), lng: Number(c.lng),
+    link: safeUrl(c.link)
+  };
+}
+
+function catColor(cat) { return CAT_COLORS[cat] || '#ffffff'; }
+
+function motion(duration) { return reduceMotion ? { animate: false } : { duration }; }
+
+function scrollToApp() { document.getElementById('app').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' }); }
 
 function getInitials(name) {
   const cleaned = name.replace(/—|–|-/g, ' ');
@@ -648,50 +731,93 @@ function paceMatch(clubPace, filter) {
   return false;
 }
 
-/* ── FILTER TOGGLE ────────────────────────────────────────────────── */
-function toggleFilters() {
-  state.filtersOpen = !state.filtersOpen;
+/* ── DAYS & START TIMES ───────────────────────────────────────────── */
+// Clubs whose entry names no weekday (e.g. "varies") can't be matched to a day,
+// so they're listed under every day with a "check socials" note.
+function daysVary(c) { return !c.days.some(d => DAYS.includes(d)); }
+function runsOn(c, day) { return c.days.includes(day) || daysVary(c); }
+
+function dayText(c) {
+  if (daysVary(c)) return 'Day varies — check socials';
+  return c.days.length > 2 ? c.days[0] + ' +' + (c.days.length-1) : c.days.join(', ');
+}
+
+// Minutes after midnight of the first clock time in a free-text time field
+// ("18:30", "Gather 8:45, start 9:30"), or null for "Evening", "various" etc.
+function startMinutes(time) {
+  const m = String(time).match(/\b(\d{1,2})[:.](\d{2})\b/);
+  return m ? parseInt(m[1], 10) * 60 + parseInt(m[2], 10) : null;
+}
+
+function nowMinutes() { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); }
+
+function fmtMinutes(m) { return Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0'); }
+
+// Where a club stands today: 'upcoming', 'past', 'unknown' (no clock time) or 'varies'
+function todayStatus(c) {
+  if (daysVary(c)) return 'varies';
+  const start = startMinutes(c.time);
+  if (start == null) return 'unknown';
+  return start < nowMinutes() ? 'past' : 'upcoming';
+}
+
+/* ── CONTROLS ─────────────────────────────────────────────────────── */
+const PILL_GROUPS = { timeFilter:'timeOfDay', dayFilter:'day', distFilter:'distance', paceFilter:'pace', catFilter:'cat' };
+
+function toggleFilters(open = !state.filtersOpen) {
+  state.filtersOpen = open;
   const body = document.getElementById('filtersBody');
-  const chevron = document.getElementById('filtersChevron');
-  body.classList.toggle('open', state.filtersOpen);
-  chevron.classList.toggle('open', state.filtersOpen);
+  body.classList.toggle('open', open);
+  body.inert = !open;
+  document.getElementById('filtersChevron').classList.toggle('open', open);
+  document.getElementById('filtersToggle').setAttribute('aria-expanded', open);
 }
 
-function getActiveFilterCount() {
-  return [state.cat, state.day, state.timeOfDay, state.distance, state.pace].filter(Boolean).length;
-}
+// Reflect state onto every control that mirrors it: pills, Today and Near Me buttons, filter badge
+function syncControls() {
+  for (const [id, key] of Object.entries(PILL_GROUPS)) {
+    document.querySelectorAll('#' + id + ' .pill').forEach(p => {
+      const on = p.textContent === state[key];
+      p.classList.toggle('active', on);
+      p.setAttribute('aria-pressed', on);
+    });
+  }
 
-function updateFilterBadge() {
-  const n = getActiveFilterCount();
+  const tonightBtn = document.getElementById('tonightBtn');
+  tonightBtn.textContent = state.today ? 'Clear' : 'Show';
+  tonightBtn.classList.toggle('active', state.today);
+  tonightBtn.setAttribute('aria-pressed', state.today);
+
+  const nearSide = document.getElementById('nearSideBtn');
+  const nearNav  = document.getElementById('nearNavBtn');
+  nearSide.textContent = state.nearMe ? '✓ Sorted by distance' : '📍 Sort by distance from me';
+  [nearSide, nearNav].forEach(b => { b.classList.toggle('active', state.nearMe); b.setAttribute('aria-pressed', state.nearMe); });
+
+  const n = [state.cat, state.day, state.timeOfDay, state.distance, state.pace].filter(Boolean).length;
   const badge = document.getElementById('filterCount');
-  badge.textContent = n;
+  badge.innerHTML = n ? n + '<span class="sr-only"> active</span>' : '';
   badge.classList.toggle('visible', n > 0);
 }
 
 /* ── TODAY INIT ───────────────────────────────────────────────────── */
 function initToday() {
-  const count = CLUBS.filter(c => c.days.includes(TODAY)).length;
+  const today = CLUBS.filter(c => c.days.includes(TODAY));
+  const varies = CLUBS.filter(daysVary).length;
+  const next = today.map(c => startMinutes(c.time)).filter(m => m != null && m >= nowMinutes()).sort((a, b) => a - b)[0];
+  let sub = today.length + ' club' + (today.length !== 1 ? 's' : '') + ' out today';
+  if (next != null) sub += ' · next at ' + fmtMinutes(next);
+  if (varies) sub += ' · +' + varies + ' with varying days';
   document.getElementById('tonightLabel').textContent = 'Running ' + TODAY;
-  document.getElementById('tonightSub').textContent = count + ' club' + (count !== 1 ? 's' : '') + ' out today';
+  document.getElementById('tonightSub').textContent = sub;
 }
 
 function activateToday() { if (!state.today) toggleToday(); }
 
 function toggleToday() {
   state.today = !state.today;
-  if (state.today) {
-    state.day = TODAY;
-    document.querySelectorAll('#dayFilter .pill').forEach(p => p.classList.toggle('active', p.textContent === TODAY));
-    document.getElementById('tonightBtn').textContent = 'Clear';
-    document.getElementById('tonightBtn').classList.add('active');
-    if (!state.filtersOpen) toggleFilters();
-  } else {
-    state.day = null;
-    document.querySelectorAll('#dayFilter .pill').forEach(p => p.classList.remove('active'));
-    document.getElementById('tonightBtn').textContent = 'Show';
-    document.getElementById('tonightBtn').classList.remove('active');
-  }
-  updateFilterBadge();
+  state.day = state.today ? TODAY : null;
+  if (state.today) toggleFilters(true);
+  syncControls();
   render(true);
 }
 
@@ -710,33 +836,39 @@ function initGreeting() {
 function toggleNearMe() {
   if (state.nearMe) {
     state.nearMe = false;
-    document.getElementById('nearSideBtn').classList.remove('active');
-    document.getElementById('nearSideBtn').innerHTML = '📍 Sort by distance from me';
-    document.getElementById('nearNavBtn').classList.remove('active');
+    syncControls();
     render(true);
-  } else {
-    navigator.geolocation.getCurrentPosition(pos => {
-      state.userLat = pos.coords.latitude; state.userLng = pos.coords.longitude;
-      state.nearMe = true;
-      document.getElementById('nearSideBtn').classList.add('active');
-      document.getElementById('nearSideBtn').innerHTML = '✓ Sorted by distance';
-      document.getElementById('nearNavBtn').classList.add('active');
-      render(true);
-    }, () => alert('Allow location access to use this feature.'));
+    return;
   }
+  if (!navigator.geolocation) { alert('Your browser does not support location access.'); return; }
+  navigator.geolocation.getCurrentPosition(pos => {
+    state.userLat = pos.coords.latitude; state.userLng = pos.coords.longitude;
+    state.nearMe = true;
+    syncControls();
+    render(true);
+  }, () => alert('Allow location access to use this feature.'));
 }
 
 /* ── MAP ──────────────────────────────────────────────────────────── */
-const map = L.map('map', { wheelPxPerZoomLevel: 200, zoomSnap: 0.25, zoomDelta: 0.5 }).setView([50.0755, 14.4378], 12);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/">CARTO</a>',
-  subdomains: 'abcd',
-  maxZoom: 19
-}).addTo(map);
-map.on('click', () => { if (state.selected) closeModal(); });
+// The map is an enhancement: if Leaflet fails to load (blocked CDN, ad-blocker)
+// `map` is null and the club list still works.
+const map = (typeof L !== 'undefined')
+  ? L.map('map', { wheelPxPerZoomLevel: 200, zoomSnap: 0.25, zoomDelta: 0.5 }).setView([50.0755, 14.4378], 12)
+  : null;
+
+if (map) {
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 19
+  }).addTo(map);
+  map.on('click', closeModal);
+} else {
+  document.getElementById('map').innerHTML = '<div class="map-error">The map couldn’t load. The club list still works.</div>';
+}
 
 function makeIcon(club, selected) {
-  const color = CAT_COLORS[club.category] || '#fff';
+  const color = catColor(club.category);
   const s = selected ? 20 : 13;
   return L.divIcon({
     className: '',
@@ -747,14 +879,22 @@ function makeIcon(club, selected) {
 
 const markers = {};
 
+/* ── MOBILE LIST / MAP VIEW ───────────────────────────────────────── */
+function setView(view) {
+  document.getElementById('app').dataset.view = view;
+  document.querySelectorAll('.view-toggle button').forEach(b => b.setAttribute('aria-pressed', b.dataset.view === view));
+  if (view === 'map' && map) {
+    map.invalidateSize();
+    fitVisibleMarkers(getFiltered());
+  }
+}
+
 /* ── LEGEND ───────────────────────────────────────────────────────── */
 const legendEl = document.getElementById('legend');
 function buildLegend(cats) {
-  legendEl.innerHTML = '';
-  cats.forEach(cat => {
-    const color = CAT_COLORS[cat] || '#fff';
-    legendEl.innerHTML += `<div class="leg-item"><div class="leg-dot" style="background:${color}"></div>${cat}</div>`;
-  });
+  legendEl.innerHTML = cats.map(cat =>
+    `<div class="leg-item"><div class="leg-dot" style="background:${catColor(cat)}"></div>${esc(cat)}</div>`
+  ).join('');
 }
 
 /* ── PILLS ────────────────────────────────────────────────────────── */
@@ -762,18 +902,12 @@ function buildPills(containerId, items, key) {
   const el = document.getElementById(containerId);
   items.forEach(item => {
     const btn = document.createElement('button');
-    btn.className = 'pill'; btn.textContent = item;
+    btn.type = 'button'; btn.className = 'pill'; btn.textContent = item;
+    btn.setAttribute('aria-pressed', 'false');
     btn.onclick = () => {
-      const on = btn.classList.contains('active');
-      el.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
-      state[key] = on ? null : item;
-      if (!on) btn.classList.add('active');
-      if (key === 'day') {
-        state.today = false;
-        document.getElementById('tonightBtn').textContent = 'Show';
-        document.getElementById('tonightBtn').classList.remove('active');
-      }
-      updateFilterBadge();
+      state[key] = state[key] === item ? null : item;
+      if (key === 'day') state.today = state.day === TODAY;
+      syncControls();
       render(true);
     };
     el.appendChild(btn);
@@ -786,18 +920,19 @@ buildPills('distFilter', DISTANCES, 'distance');
 buildPills('paceFilter', PACES, 'pace');
 // catFilter pills + legend are built in loadClubs() from categories present in the data
 
-document.getElementById('searchInput').addEventListener('input', e => { state.search = e.target.value.toLowerCase(); render(true); });
+// The list updates on every keystroke; the map waits until typing pauses so it doesn't jump around
+let fitTimer;
+document.getElementById('searchInput').addEventListener('input', e => {
+  state.search = e.target.value.toLowerCase();
+  render();
+  clearTimeout(fitTimer);
+  fitTimer = setTimeout(() => fitVisibleMarkers(getFiltered()), 400);
+});
 
 function resetFilters() {
   Object.assign(state, { search:'', cat:null, day:null, timeOfDay:null, distance:null, pace:null, today:false, nearMe:false });
   document.getElementById('searchInput').value = '';
-  document.querySelectorAll('.pill.active').forEach(p => p.classList.remove('active'));
-  document.getElementById('tonightBtn').textContent = 'Show';
-  document.getElementById('tonightBtn').classList.remove('active');
-  document.getElementById('nearSideBtn').classList.remove('active');
-  document.getElementById('nearSideBtn').innerHTML = '📍 Sort by distance from me';
-  document.getElementById('nearNavBtn').classList.remove('active');
-  updateFilterBadge();
+  syncControls();
   render(true);
 }
 
@@ -806,7 +941,7 @@ function getFiltered() {
   let list = CLUBS.filter(c => {
     if (state.search && !c.name.toLowerCase().includes(state.search) && !c.meet.toLowerCase().includes(state.search)) return false;
     if (state.cat   && c.category !== state.cat)               return false;
-    if (state.day   && !c.days.includes(state.day))            return false;
+    if (state.day   && !runsOn(c, state.day))                  return false;
     if (state.timeOfDay && !c.timeFilter.includes(state.timeOfDay)) return false;
     if (state.distance && !c.distFilter.includes(state.distance)) return false;
     if (state.pace  && !paceMatch(c.pace, state.pace))         return false;
@@ -817,14 +952,22 @@ function getFiltered() {
       haversine(state.userLat, state.userLng, a.lat, a.lng) -
       haversine(state.userLat, state.userLng, b.lat, b.lng)
     );
+  } else if (state.day === TODAY) {
+    // Today: next sessions first by start time, then ones without a clock time, then ones already under way
+    const rank = { upcoming: 0, unknown: 1, varies: 2, past: 3 };
+    list = [...list].sort((a, b) =>
+      rank[todayStatus(a)] - rank[todayStatus(b)] ||
+      (startMinutes(a.time) ?? 0) - (startMinutes(b.time) ?? 0)
+    );
   }
   return list;
 }
 
 function fitVisibleMarkers(visibleList) {
-  if (visibleList.length === 0 || state.selected) return;
-  const bounds = L.latLngBounds(visibleList.map(c => [c.lat, c.lng]));
-  map.flyToBounds(bounds, { padding: [50, 50], maxZoom: 14, duration: 0.65 });
+  if (!map || state.selected) return;
+  const points = visibleList.filter(c => markers[c.id]).map(c => [c.lat, c.lng]);
+  if (!points.length) return;
+  map.flyToBounds(L.latLngBounds(points), { padding: [50, 50], maxZoom: 14, ...motion(0.65) });
 }
 
 /* ── RENDER ───────────────────────────────────────────────────────── */
@@ -838,30 +981,36 @@ function render(fit = false) {
     container.innerHTML = '<div class="no-results">No clubs match your filters.</div>';
   }
 
+  const todayMode = state.day === TODAY;
   list.forEach(c => {
-    const color = CAT_COLORS[c.category];
+    const color = catColor(c.category);
     const dist  = (state.nearMe && state.userLat != null) ? haversine(state.userLat, state.userLng, c.lat, c.lng) : null;
+    const past  = todayMode && todayStatus(c) === 'past';
     const card  = document.createElement('div');
-    card.className = 'club-card' + (state.selected === c.id ? ' selected' : '');
+    card.className = 'club-card' + (state.selected === c.id ? ' selected' : '') + (past ? ' past' : '');
+    card.dataset.clubId = c.id;
 
     card.innerHTML = `
-      <div class="c-avatar" style="background:${color}16;color:${color}">${getInitials(c.name)}</div>
-      <div class="c-body">
-        <div class="c-name">${c.name}</div>
-        <div class="c-row">
-          <span>${c.days.length > 2 ? c.days[0] + ' +' + (c.days.length-1) : c.days.join(', ')}</span>
-          <span class="sep">·</span>
-          <span>${c.time}</span>
-          ${dist != null ? `<span class="sep">·</span><span>${dist.toFixed(1)} km</span>` : ''}
-        </div>
-        <div class="c-row">📍 ${c.meet}</div>
-        <div class="c-tags">
-          <span class="ctag ${c.free ? 'ctag-free' : 'ctag-paid'}">${c.free ? '✓ Free' : 'Paid'}</span>
-          <span class="ctag" style="background:${color}13;color:${color}">${c.category}</span>
-          <span class="ctag ctag-dist">📏 ${c.distText}</span>
-        </div>
-      </div>
-      ${c.link ? `<a class="c-link" href="${c.link}" target="_blank" rel="noopener" title="Visit website">↗</a>` : ''}
+      <button type="button" class="c-main" aria-haspopup="dialog">
+        <span class="c-avatar" aria-hidden="true" style="background:${color}16;color:${color}">${esc(getInitials(c.name))}</span>
+        <span class="c-body">
+          <span class="c-name">${esc(c.name)}</span>
+          <span class="c-row">
+            <span>${esc(dayText(c))}</span>
+            <span class="sep" aria-hidden="true">·</span>
+            <span>${esc(c.time)}</span>
+            ${dist != null && Number.isFinite(dist) ? `<span class="sep" aria-hidden="true">·</span><span>${dist.toFixed(1)} km</span>` : ''}
+          </span>
+          <span class="c-row"><span aria-hidden="true">📍</span> ${esc(c.meet)}</span>
+          <span class="c-tags">
+            ${past ? '<span class="ctag ctag-when">Earlier today</span>' : ''}
+            <span class="ctag ${c.free ? 'ctag-free' : 'ctag-paid'}">${c.free ? '✓ Free' : 'Paid'}</span>
+            <span class="ctag" style="background:${color}13;color:${color}">${esc(c.category)}</span>
+            <span class="ctag ctag-dist"><span aria-hidden="true">📏</span> ${esc(c.distText)}</span>
+          </span>
+        </span>
+      </button>
+      ${c.link ? `<a class="c-link" href="${esc(c.link)}" target="_blank" rel="noopener" aria-label="${esc(c.name)} website (opens in new tab)">↗</a>` : ''}
     `;
 
     card.addEventListener('click', e => {
@@ -872,25 +1021,35 @@ function render(fit = false) {
   });
 
   const visible = new Set(list.map(c => c.id));
-  CLUBS.forEach(c => markers[c.id].setOpacity(visible.has(c.id) ? 1 : 0.08));
+  CLUBS.forEach(c => markers[c.id]?.setOpacity(visible.has(c.id) ? 1 : 0.08));
   if (fit) fitVisibleMarkers(list);
 }
 
 /* ── MODAL ────────────────────────────────────────────────────────── */
-function openModal(id) {
-  state.selected = id;
-  const club = CLUBS.find(c => c.id === id);
-  const color = CAT_COLORS[club.category] || '#fff';
+let modalReturnFocus = null;
 
-  CLUBS.forEach(c => markers[c.id].setIcon(makeIcon(c, c.id === id)));
-  map.flyTo([club.lat, club.lng], 15, { duration: 0.55 });
-  markers[id].openPopup();
+function isModalOpen() { return document.getElementById('modalOverlay').classList.contains('visible'); }
+
+function openModal(id) {
+  const club = CLUBS.find(c => c.id === id);
+  if (!club) return;
+  if (!isModalOpen()) modalReturnFocus = document.activeElement;
+  state.selected = id;
+  const color = catColor(club.category);
+
+  if (map) {
+    CLUBS.forEach(c => markers[c.id]?.setIcon(makeIcon(c, c.id === id)));
+    if (markers[id]) {
+      map.flyTo([club.lat, club.lng], 15, motion(0.55));
+      markers[id].openPopup();
+    }
+  }
 
   document.getElementById('mCatDot').style.background = color;
   document.getElementById('mName').textContent = club.name;
   document.getElementById('mCatLabel').style.color = color;
   document.getElementById('mCatLabel').textContent = club.category;
-  document.getElementById('mDay').textContent   = club.days.join(', ');
+  document.getElementById('mDay').textContent   = daysVary(club) ? 'Varies — check socials' : club.days.join(', ');
   document.getElementById('mTime').textContent  = club.time;
   document.getElementById('mPace').textContent  = club.pace;
   document.getElementById('mDist').textContent  = club.distText;
@@ -904,32 +1063,62 @@ function openModal(id) {
   badge.className = 'modal-free-badge ' + (club.free ? 'free' : 'paid');
 
   const link = document.getElementById('mLink');
-  if (club.link) { link.href = club.link; link.style.display = 'inline-flex'; }
-  else { link.style.display = 'none'; }
+  if (club.link) {
+    link.href = club.link;
+    link.setAttribute('aria-label', 'Visit ' + club.name + ' website (opens in new tab)');
+    link.style.display = 'inline-flex';
+  } else {
+    link.style.display = 'none';
+  }
 
-  document.getElementById('modalOverlay').classList.add('visible');
+  const overlay = document.getElementById('modalOverlay');
+  overlay.inert = false;
+  overlay.classList.add('visible');
   document.body.style.overflow = 'hidden';
 
   render();
+  document.getElementById('modalClose').focus();
 }
 
 function closeModal() {
+  if (!isModalOpen()) return;
+  const id = state.selected;
   state.selected = null;
-  document.getElementById('modalOverlay').classList.remove('visible');
+  const overlay = document.getElementById('modalOverlay');
+  overlay.classList.remove('visible');
+  overlay.inert = true;
   document.body.style.overflow = '';
-  CLUBS.forEach(c => markers[c.id].setIcon(makeIcon(c, false)));
-  map.closePopup();
+  if (map) {
+    CLUBS.forEach(c => markers[c.id]?.setIcon(makeIcon(c, false)));
+    map.closePopup();
+  }
   render();
+  // The list was re-rendered, so the card that opened the modal may now be a new element
+  const target = modalReturnFocus?.isConnected
+    ? modalReturnFocus
+    : document.querySelector(`.club-card[data-club-id="${CSS.escape(String(id))}"] .c-main`);
+  target?.focus();
+  modalReturnFocus = null;
 }
 
 function handleOverlayClick(e) {
   if (e.target === document.getElementById('modalOverlay')) closeModal();
 }
 
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+// Escape closes the modal; Tab stays inside it while it's open
+document.addEventListener('keydown', e => {
+  if (!isModalOpen()) return;
+  if (e.key === 'Escape') { closeModal(); return; }
+  if (e.key !== 'Tab') return;
+  const modal = document.getElementById('modal');
+  const focusables = [...modal.querySelectorAll('button, a[href]')].filter(el => el.offsetParent !== null);
+  const first = focusables[0], last = focusables[focusables.length - 1];
+  if (!modal.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+  else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+});
 
 /* ── INIT ─────────────────────────────────────────────────────────── */
-initGreeting();
 
 /* ── OFFLINE FALLBACK ──
    Auto-generated snapshot of the Google Sheet (source of truth) as of 2026-06-14.
@@ -1420,19 +1609,23 @@ async function loadClubs() {
     CLUBS = FALLBACK_CLUBS;
     usingFallback = true;
   }
+  CLUBS = CLUBS.map(normalizeClub);
 
-  CLUBS.forEach(c => {
-    const m = L.marker([c.lat, c.lng], { icon: makeIcon(c, false) }).addTo(map)
-      .bindPopup(
-        '<div class="popup-name">' + c.name + '</div>' +
-        '<div class="popup-row">📅 <span>' + c.days.join(', ') + ' · ' + c.time + '</span></div>' +
-        '<div class="popup-row">⏱ <span>' + c.pace + '</span></div>' +
-        '<div class="popup-row">📏 <span>' + c.distText + '</span></div>' +
-        '<div class="popup-row">📍 <span>' + c.meet + '</span></div>'
-      );
-    m.on('click', function(e) { L.DomEvent.stopPropagation(e); openModal(c.id); });
-    markers[c.id] = m;
-  });
+  if (map) {
+    CLUBS.forEach(c => {
+      if (!Number.isFinite(c.lat) || !Number.isFinite(c.lng)) return;
+      const m = L.marker([c.lat, c.lng], { icon: makeIcon(c, false), title: c.name }).addTo(map)
+        .bindPopup(
+          '<div class="popup-name">' + esc(c.name) + '</div>' +
+          '<div class="popup-row">📅 <span>' + esc(c.days.join(', ') + ' · ' + c.time) + '</span></div>' +
+          '<div class="popup-row">⏱ <span>' + esc(c.pace) + '</span></div>' +
+          '<div class="popup-row">📏 <span>' + esc(c.distText) + '</span></div>' +
+          '<div class="popup-row">📍 <span>' + esc(c.meet) + '</span></div>'
+        );
+      m.on('click', function(e) { L.DomEvent.stopPropagation(e); openModal(c.id); });
+      markers[c.id] = m;
+    });
+  }
 
   // Build category legend + filter pills only for categories that actually exist in the data
   const presentCats = Object.keys(CAT_COLORS).filter(cat => CLUBS.some(c => c.category === cat));
@@ -1448,13 +1641,16 @@ async function loadClubs() {
   if (usingFallback) {
     const note = document.createElement('div');
     note.className = 'no-results';
+    note.setAttribute('role', 'status');
     note.style.cssText = 'color:var(--accent2);font-size:12px;margin-bottom:8px';
-    note.innerHTML = '⚠️ Showing a saved snapshot — live data could not be loaded. Pull to refresh later.';
+    note.textContent = '⚠️ Live data couldn’t be loaded, so this is a saved snapshot from ' + FALLBACK_DATE +
+      ' and some details may be out of date. Try reloading the page later.';
     const list = document.getElementById('clubsList');
     list.parentNode.insertBefore(note, list);
   }
 
   initToday();
+  syncControls();
   render();
 }
 
