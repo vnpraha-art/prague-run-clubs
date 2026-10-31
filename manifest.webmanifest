@@ -1,0 +1,22 @@
+{
+  "id": "/",
+  "name": "Prague Run Clubs",
+  "short_name": "Run Clubs",
+  "description": "Find running clubs in Prague and nearby. Interactive map with filters by day, pace, time, and distance.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080808",
+  "theme_color": "#080808",
+  "lang": "en",
+  "categories": ["sports", "health", "lifestyle"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Running Today", "short_name": "Today", "url": "/?today=1&source=pwa", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

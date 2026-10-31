@@ -13,6 +13,15 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="theme-color" content="#080808">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23080808'/%3E%3Ctext x='32' y='45' font-family='Arial Black,Arial,sans-serif' font-weight='900' font-size='30' text-anchor='middle' fill='%23e8ff47'%3EPR%3C/text%3E%3C/svg%3E">
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+
+  <!-- App (PWA): makes the site installable to the home screen -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Run Clubs">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
@@ -468,6 +477,33 @@
       .nav-right { gap: 6px; }
       .btn-tonight-nav, .btn-near-nav { padding: 7px 12px; white-space: nowrap; }
     }
+    /* ─── INSTALL BANNER (PWA) ──────────────────────────────────── */
+    .install-banner {
+      position: fixed; left: 16px; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 1500;
+      max-width: 440px; margin: 0 auto;
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 12px 12px 14px;
+      background: var(--s2); border: 1px solid var(--border); border-radius: var(--r);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+      transform: translateY(140%); opacity: 0; transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    .install-banner.visible { transform: translateY(0); opacity: 1; }
+    .install-banner[hidden] { display: none; }
+    .install-banner img { width: 40px; height: 40px; border-radius: 9px; flex-shrink: 0; }
+    .install-text { flex: 1; min-width: 0; font-size: 13px; line-height: 1.35; color: var(--muted); }
+    .install-text strong { display: block; color: var(--text); font-size: 14px; font-weight: 700; }
+    .install-text .share-ico { display: inline-block; vertical-align: -2px; width: 14px; height: 14px; }
+    .btn-install {
+      padding: 8px 14px; background: var(--accent); color: #000; border: none; border-radius: 100px;
+      font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap;
+    }
+    .btn-install[hidden] { display: none; }
+    .btn-install-close {
+      width: 30px; height: 30px; flex-shrink: 0; background: transparent; border: none; color: var(--muted);
+      font-size: 20px; line-height: 1; cursor: pointer; border-radius: 50%;
+    }
+    .btn-install-close:hover { color: var(--text); background: var(--s3); }
+
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
       *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -653,6 +689,17 @@
       </div>
     </div>
   </div>
+</div>
+
+<!-- Install-as-app banner (shown by the PWA script at the bottom) -->
+<div class="install-banner" id="installBanner" role="dialog" aria-label="Install Prague Run Clubs" hidden>
+  <img src="/icons/icon-192.png" alt="" width="40" height="40">
+  <div class="install-text" id="installText">
+    <strong>Get the app</strong>
+    Add Prague Run Clubs to your home screen.
+  </div>
+  <button type="button" class="btn-install" id="installBtn" hidden>Install</button>
+  <button type="button" class="btn-install-close" id="installClose" aria-label="Dismiss">×</button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -1840,12 +1887,25 @@ async function loadClubs() {
     }
   }
 
+  // Last successful download is kept on the device, so the installed app works offline
+  // with data that is as fresh as the visitor's last online visit.
+  const SAVED_KEY = 'prc_clubs_v1';
+  let fallbackDate = FALLBACK_DATE;
   try {
     CLUBS = await fetchClubs();
+    try { localStorage.setItem(SAVED_KEY, JSON.stringify({ savedAt: Date.now(), clubs: CLUBS })); } catch {}
   } catch (err) {
-    console.warn('Live data unavailable — using offline fallback snapshot.');
-    CLUBS = FALLBACK_CLUBS;
     usingFallback = true;
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(SAVED_KEY) || 'null'); } catch {}
+    if (saved && Array.isArray(saved.clubs) && saved.clubs.length) {
+      console.warn('Live data unavailable — using data saved on this device.');
+      CLUBS = saved.clubs;
+      fallbackDate = new Date(saved.savedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    } else {
+      console.warn('Live data unavailable — using offline fallback snapshot.');
+      CLUBS = FALLBACK_CLUBS;
+    }
   }
   CLUBS = CLUBS.map(normalizeClub);
 
@@ -1879,7 +1939,7 @@ async function loadClubs() {
     note.className = 'no-results';
     note.setAttribute('role', 'status');
     note.style.cssText = 'color:var(--accent2);font-size:12px;margin-bottom:8px';
-    note.textContent = '⚠️ Live data couldn’t be loaded, so this is a saved snapshot from ' + FALLBACK_DATE +
+    note.textContent = '⚠️ Live data couldn’t be loaded, so this is a saved snapshot from ' + fallbackDate +
       ' and some details may be out of date. Try reloading the page later.';
     const list = document.getElementById('clubsList');
     list.parentNode.insertBefore(note, list);
@@ -1888,9 +1948,75 @@ async function loadClubs() {
   initToday();
   syncControls();
   render();
+
+  // Home-screen shortcut "Running Today" opens /?today=1
+  if (new URLSearchParams(location.search).get('today') === '1') { scrollToApp(); activateToday(); }
 }
 
 loadClubs();
+
+/* ── APP (PWA): offline support + install banner ─────────────────────── */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(err => console.warn('Service worker not registered:', err));
+  });
+}
+
+(function initInstallBanner() {
+  const banner = document.getElementById('installBanner');
+  const btn = document.getElementById('installBtn');
+  const text = document.getElementById('installText');
+  const DISMISS_KEY = 'prc_install_dismissed';
+  const DISMISS_DAYS = 30;
+  let deferredPrompt = null;
+
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  if (isStandalone) return;   // already installed
+
+  let dismissedAt = 0;
+  try { dismissedAt = Number(localStorage.getItem(DISMISS_KEY)) || 0; } catch {}
+  if (Date.now() - dismissedAt < DISMISS_DAYS * 864e5) return;
+
+  const ua = navigator.userAgent;
+  const isIOS = /iphone|ipad|ipod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+
+  function show() {
+    banner.hidden = false;
+    requestAnimationFrame(() => requestAnimationFrame(() => banner.classList.add('visible')));
+  }
+  function hide(remember) {
+    banner.classList.remove('visible');
+    setTimeout(() => { banner.hidden = true; }, 300);
+    if (remember) { try { localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch {} }
+  }
+
+  document.getElementById('installClose').addEventListener('click', () => hide(true));
+
+  // Android / Chrome / Edge: the browser offers a real install prompt
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    btn.hidden = false;
+    setTimeout(show, 5000);
+  });
+  btn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    hide(outcome !== 'accepted');
+  });
+  window.addEventListener('appinstalled', () => hide(false));
+
+  // iPhone / iPad: no install prompt exists, so show how to do it by hand
+  if (isIOS) {
+    text.innerHTML = '<strong>Get the app</strong>Tap ' +
+      '<svg class="share-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Share">' +
+      '<path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>' +
+      ' Share, then <b style="color:var(--text)">Add to Home Screen</b>.';
+    setTimeout(show, 5000);
+  }
+})();
 
 </script>
 </body>
