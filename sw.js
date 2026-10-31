@@ -10,14 +10,14 @@
 
    Bump VERSION when you change this file so old caches are cleared. */
 
-const VERSION = 'prc-v1';
+const VERSION = 'prc-v2';
 const CORE = [
   '/',
   '/manifest.webmanifest',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
-  '/icons/apple-touch-icon.png',
-  '/icons/favicon-32.png'
+  '/icon-192.png',
+  '/icon-512.png',
+  '/apple-touch-icon.png',
+  '/favicon-32.png'
 ];
 const CDN_HOSTS = ['cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 
